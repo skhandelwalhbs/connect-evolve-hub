@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, Bell, PlusCircle, Edit, Trash2, Check } from "lucide-react";
@@ -59,7 +58,7 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
           variant: "destructive",
         });
       } else {
-        // First cast to unknown, then to Reminder[] to safely handle the type conversion
+        // First cast to unknown, then to Reminder[], to safely handle the type conversion
         const typedData = data ? (data as unknown as Reminder[]) : [];
         setReminders(typedData);
         
@@ -148,14 +147,17 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
         description: "Reminder marked as completed",
       });
       
-      // Fetch updated reminders first
+      // Fetch updated reminders
       await fetchReminders();
       
-      // Only after the reminder is marked as complete AND fetching is done, 
-      // show the interaction dialog if needed
+      // Show the interaction dialog if needed
       if (logInteraction) {
-        console.log("Should open interaction dialog for reminder:", reminderToComplete);
+        console.log("Opening interaction dialog for reminder:", reminderToComplete);
+        // This was not working correctly - we need to ensure the dialog opens
         setShowAddInteractionDialog(true);
+      } else {
+        // Make sure to clear the completed reminder if not logging an interaction
+        setReminderToComplete(null);
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -372,12 +374,15 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Add Interaction Dialog */}
-      {showAddInteractionDialog && reminderToComplete && (
+      {/* Add Interaction Dialog - Important fix: ensure it's rendered properly when needed */}
+      {reminderToComplete && showAddInteractionDialog && (
         <AddInteractionDialog
           contact={{ id: contactId } as any}
           open={showAddInteractionDialog}
-          onOpenChange={setShowAddInteractionDialog}
+          onOpenChange={(open) => {
+            setShowAddInteractionDialog(open);
+            if (!open) setReminderToComplete(null);
+          }}
           onSuccess={handleInteractionAdded}
           defaultValues={{
             type: reminderToComplete.channel as any,
