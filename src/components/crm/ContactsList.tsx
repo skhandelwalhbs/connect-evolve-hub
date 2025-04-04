@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Mail, Phone, MessageSquare, User, Briefcase, MapPin, Link2, Clock } from "lucide-react";
+import { Calendar, Mail, Phone, MessageSquare, User, Briefcase, MapPin, Link2, Clock, FileText } from "lucide-react";
 import { AddInteractionDialog } from "@/components/crm/AddInteractionDialog";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -63,6 +63,7 @@ export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsL
             <TableHead>Contact Info</TableHead>
             <TableHead>URL</TableHead>
             <TableHead>Added</TableHead>
+            <TableHead>Notes</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -129,6 +130,16 @@ export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsL
                   <Clock className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                   {new Date(contact.created_at).toLocaleDateString()}
                 </div>
+              </TableCell>
+              <TableCell>
+                {contact.notes ? (
+                  <div className="flex items-center">
+                    <FileText className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                    <span className="max-w-[180px] truncate block" title={contact.notes}>
+                      {contact.notes.length > 30 ? `${contact.notes.substring(0, 30)}...` : contact.notes}
+                    </span>
+                  </div>
+                ) : "-"}
               </TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>
                 <div className="flex space-x-2">
