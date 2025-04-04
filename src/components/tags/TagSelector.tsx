@@ -124,7 +124,13 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0 z-50" align="start">
+        <PopoverContent 
+          className="w-full p-0" 
+          align="start"
+          style={{ zIndex: 100 }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
           <Command>
             <CommandInput placeholder="Search tags..." />
             <CommandList>
@@ -140,16 +146,23 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
                       value={tag.id}
                       onSelect={(currentValue) => {
                         console.log(`CommandItem onSelect fired for tag: ${tag.name}`);
-                        handleSelectTag(tag);
+                        // We'll handle selection in the div onClick handler instead
                       }}
                       className="cursor-pointer"
                     >
                       <div 
-                        className="flex items-center w-full mr-2"
+                        className="flex items-center w-full mr-2 cursor-pointer select-none"
                         onClick={(e) => {
-                          e.stopPropagation(); // Stop propagation to prevent bubbling
+                          e.preventDefault();
+                          e.stopPropagation();
                           handleSelectTag(tag, e);
                         }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        role="button"
+                        tabIndex={0}
                       >
                         <Check
                           className={cn(
