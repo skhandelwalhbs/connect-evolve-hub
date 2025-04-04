@@ -100,7 +100,7 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 relative">
       <div className="flex flex-wrap gap-1">
         {selectedTags.map(tag => (
           <Tag 
@@ -128,58 +128,78 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
           className="w-full p-0" 
           align="start"
           style={{ zIndex: 9999 }} // Highest possible z-index to ensure it's always on top
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
         >
-          <Command>
-            <CommandInput placeholder="Search tags..." />
-            <CommandList>
-              <CommandEmpty>
-                {isLoading ? "Loading..." : "No tags found."}
-              </CommandEmpty>
-              <CommandGroup>
-                {tags.map((tag) => {
-                  const isSelected = selectedTags.some(t => t.id === tag.id);
-                  return (
-                    <CommandItem
-                      key={tag.id}
-                      value={tag.id}
-                      onSelect={(currentValue) => {
-                        console.log(`CommandItem onSelect fired for tag: ${tag.name}`);
-                        // We'll handle selection in the div onClick handler instead
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <div 
-                        className="flex items-center w-full mr-2 cursor-pointer select-none"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleSelectTag(tag, e);
+          <div 
+            className="w-full"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
+            <Command>
+              <CommandInput 
+                placeholder="Search tags..." 
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              />
+              <CommandList>
+                <CommandEmpty>
+                  {isLoading ? "Loading..." : "No tags found."}
+                </CommandEmpty>
+                <CommandGroup>
+                  {tags.map((tag) => {
+                    const isSelected = selectedTags.some(t => t.id === tag.id);
+                    return (
+                      <CommandItem
+                        key={tag.id}
+                        value={tag.id}
+                        onSelect={(currentValue) => {
+                          console.log(`CommandItem onSelect fired for tag: ${tag.name}`);
+                          // We'll handle selection in the div onClick handler instead
                         }}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        role="button"
-                        tabIndex={0}
+                        className="cursor-pointer"
                       >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            isSelected ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <div className="flex-1">
-                          <Tag tag={tag} />
+                        <div 
+                          className="flex items-center w-full mr-2 cursor-pointer select-none"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSelectTag(tag, e);
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleSelectTag(tag);
+                            }
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              isSelected ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <div className="flex-1">
+                            <Tag tag={tag} />
+                          </div>
                         </div>
-                      </div>
-                    </CommandItem>
-                  );
-                })}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </div>
         </PopoverContent>
       </Popover>
     </div>
