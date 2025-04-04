@@ -1,35 +1,51 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Bell, List, Grid } from "lucide-react";
+import { PlusCircle, Bell, List, Grid, Edit } from "lucide-react";
 import { InteractionsList } from "@/components/crm/InteractionsList";
 import { RemindersSection } from "@/components/crm/RemindersSection";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { EditContactDialog } from "@/components/contacts/EditContactDialog";
 import type { Database } from "@/integrations/supabase/types";
+
 type Contact = Database['public']['Tables']['contacts']['Row'];
+
 interface ContactDetailProps {
   contact: Contact | null;
   onOpenAddInteraction: () => void;
 }
+
 export function ContactDetail({
   contact,
   onOpenAddInteraction
 }: ContactDetailProps) {
   const [activeSection, setActiveSection] = useState<'interactions' | 'reminders'>('interactions');
   const [reminderView, setReminderView] = useState<'cards' | 'table'>('cards');
+  const [showEditContactDialog, setShowEditContactDialog] = useState(false);
   
   if (!contact) {
     return <div className="text-center py-10 text-muted-foreground">
         Select a contact to view their interactions
       </div>;
   }
+
+  const handleEditSuccess = () => {
+    // Refresh contact data if needed
+  };
+
   return <Card>
       <CardHeader>
-        <CardTitle className="text-xl">
-          {contact.first_name} {contact.last_name}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xl">
+            {contact.first_name} {contact.last_name}
+          </CardTitle>
+          <Button size="sm" variant="outline" onClick={() => setShowEditContactDialog(true)}>
+            <Edit className="h-4 w-4 mr-1" />
+            Edit Contact
+          </Button>
+        </div>
         <CardDescription>
           {contact.company} - {contact.position}
         </CardDescription>
@@ -75,5 +91,15 @@ export function ContactDetail({
             </div>
           </> : <RemindersSection contactId={contact.id} contact={contact} view={reminderView} />}
       </CardContent>
+
+      {/* Edit Contact Dialog */}
+      {contact && (
+        <EditContactDialog
+          contact={contact}
+          open={showEditContactDialog}
+          onOpenChange={setShowEditContactDialog}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </Card>;
 }
