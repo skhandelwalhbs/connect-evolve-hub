@@ -49,42 +49,51 @@ export type Database = {
       }
       contacts: {
         Row: {
-          company: string | null
+          company: string
+          connected_on: string
           created_at: string
           email: string | null
           first_name: string
           id: string
-          job_title: string | null
           last_name: string
+          location: string
           notes: string | null
           phone: string | null
+          position: string
           updated_at: string
+          url: string | null
           user_id: string
         }
         Insert: {
-          company?: string | null
+          company: string
+          connected_on?: string
           created_at?: string
           email?: string | null
           first_name: string
           id?: string
-          job_title?: string | null
           last_name: string
+          location: string
           notes?: string | null
           phone?: string | null
+          position: string
           updated_at?: string
+          url?: string | null
           user_id: string
         }
         Update: {
-          company?: string | null
+          company?: string
+          connected_on?: string
           created_at?: string
           email?: string | null
           first_name?: string
           id?: string
-          job_title?: string | null
           last_name?: string
+          location?: string
           notes?: string | null
           phone?: string | null
+          position?: string
           updated_at?: string
+          url?: string | null
           user_id?: string
         }
         Relationships: []

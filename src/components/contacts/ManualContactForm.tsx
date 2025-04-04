@@ -29,14 +29,16 @@ export function ManualContactForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
-    meetingPlace: "",
-    meetingContext: "",
-    date: new Date(),
+    company: "",
+    position: "",
+    location: "",
+    url: "",
+    connectedOn: new Date(),
     notes: "",
-    connectionStrength: "medium",
   });
 
   const handleChange = (field: string, value: string | Date) => {
@@ -48,11 +50,6 @@ export function ManualContactForm() {
     
     try {
       setIsLoading(true);
-      
-      // Split name into first and last name
-      const nameParts = formData.name.trim().split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || ""; // Join the rest as last name
       
       // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
@@ -71,12 +68,15 @@ export function ManualContactForm() {
         .from('contacts')
         .insert({
           user_id: user.id,
-          first_name: firstName,
-          last_name: lastName,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
           email: formData.email,
           phone: formData.phone,
-          company: formData.meetingPlace,
-          job_title: formData.meetingContext,
+          company: formData.company,
+          position: formData.position,
+          location: formData.location,
+          url: formData.url,
+          connected_on: formData.connectedOn.toISOString().split('T')[0], // Format as YYYY-MM-DD
           notes: formData.notes
         })
         .select();
@@ -94,20 +94,11 @@ export function ManualContactForm() {
       // Success
       toast({
         title: "Contact Added",
-        description: `${formData.name} has been added to your contacts.`,
+        description: `${formData.firstName} ${formData.lastName} has been added to your contacts.`,
       });
       
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        meetingPlace: "",
-        meetingContext: "",
-        date: new Date(),
-        notes: "",
-        connectionStrength: "medium",
-      });
+      // Reset form or navigate
+      navigate("/contacts");
       
     } catch (error) {
       console.error("Unexpected error:", error);
@@ -124,99 +115,113 @@ export function ManualContactForm() {
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-4">
-        <div className="grid grid-cols-1 gap-2">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            required
-          />
-        </div>
-        
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="firstName">First Name*</Label>
             <Input
-              id="email"
-              type="email" 
-              value={formData.email}
-              onChange={(e) => handleChange("email", e.target.value)}
+              id="firstName"
+              value={formData.firstName}
+              onChange={(e) => handleChange("firstName", e.target.value)}
+              required
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="lastName">Last Name*</Label>
             <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
+              id="lastName"
+              value={formData.lastName}
+              onChange={(e) => handleChange("lastName", e.target.value)}
+              required
             />
           </div>
         </div>
         
         <div className="grid gap-2">
-          <Label htmlFor="meetingContext">Where we met</Label>
+          <Label htmlFor="email">Email Address</Label>
           <Input
-            id="meetingPlace"
-            placeholder="Location, event, platform, etc."
-            value={formData.meetingPlace}
-            onChange={(e) => handleChange("meetingPlace", e.target.value)}
+            id="email"
+            type="email" 
+            value={formData.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+          />
+        </div>
+        
+        <div className="grid gap-2">
+          <Label htmlFor="phone">Phone</Label>
+          <Input
+            id="phone"
+            value={formData.phone}
+            onChange={(e) => handleChange("phone", e.target.value)}
           />
         </div>
         
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
-            <Label>When we met</Label>
+            <Label htmlFor="company">Company*</Label>
+            <Input
+              id="company"
+              value={formData.company}
+              onChange={(e) => handleChange("company", e.target.value)}
+              required
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="position">Position*</Label>
+            <Input
+              id="position"
+              value={formData.position}
+              onChange={(e) => handleChange("position", e.target.value)}
+              required
+            />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="location">Location*</Label>
+            <Input
+              id="location"
+              value={formData.location}
+              onChange={(e) => handleChange("location", e.target.value)}
+              required
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Connected On*</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
+                  id="connectedOn"
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !formData.date && "text-muted-foreground"
+                    !formData.connectedOn && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
+                  {formData.connectedOn ? format(formData.connectedOn, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={formData.date}
-                  onSelect={(date) => date && handleChange("date", date)}
+                  selected={formData.connectedOn}
+                  onSelect={(date) => date && handleChange("connectedOn", date)}
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
           </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="connectionStrength">Connection Strength</Label>
-            <Select
-              value={formData.connectionStrength}
-              onValueChange={(value) => handleChange("connectionStrength", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select strength" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="strong">Strong</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="weak">Weak</SelectItem>
-                <SelectItem value="new">Just Met</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         
         <div className="grid gap-2">
-          <Label htmlFor="meetingContext">Meeting Context</Label>
+          <Label htmlFor="url">URL</Label>
           <Input
-            id="meetingContext"
-            placeholder="Conference, mutual friend, etc."
-            value={formData.meetingContext}
-            onChange={(e) => handleChange("meetingContext", e.target.value)}
+            id="url"
+            type="url"
+            placeholder="https://example.com"
+            value={formData.url}
+            onChange={(e) => handleChange("url", e.target.value)}
           />
         </div>
         
@@ -224,7 +229,7 @@ export function ManualContactForm() {
           <Label htmlFor="notes">Notes</Label>
           <Textarea
             id="notes"
-            placeholder="Initial impressions, follow-up ideas, etc."
+            placeholder="Additional information about this contact"
             value={formData.notes}
             onChange={(e) => handleChange("notes", e.target.value)}
             rows={3}
