@@ -93,6 +93,8 @@ export function CSVUploadForm() {
               description: `Missing required columns: ${missingColumns.join(", ")}`,
               variant: "destructive",
             });
+            setIsUploading(false);
+            setProgress(0);
             return;
           }
           
@@ -101,15 +103,38 @@ export function CSVUploadForm() {
           setProgress(50);
           
           for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
+            const line = lines[i].trim();
+            if (!line) continue;
             
-            const values = lines[i].split(",");
+            // Handle CSV values that might contain commas within quotes
+            let values: string[] = [];
+            let insideQuotes = false;
+            let currentValue = '';
+            
+            for (let j = 0; j < line.length; j++) {
+              const char = line[j];
+              
+              if (char === '"' && (j === 0 || line[j - 1] !== '\\')) {
+                insideQuotes = !insideQuotes;
+              } else if (char === ',' && !insideQuotes) {
+                values.push(currentValue);
+                currentValue = '';
+              } else {
+                currentValue += char;
+              }
+            }
+            
+            values.push(currentValue); // Add the last value
+            
+            // Fall back to simple split if the values don't match the headers
             if (values.length !== headers.length) {
-              toast({
-                title: "Invalid CSV Row",
-                description: `Row ${i} has an incorrect number of values`,
-                variant: "destructive",
-              });
+              console.log("Falling back to simple split for line:", line);
+              values = line.split(",").map(v => v.trim());
+            }
+            
+            // Skip if still doesn't match header count
+            if (values.length !== headers.length) {
+              console.log(`Row ${i} has incorrect number of values. Expected ${headers.length}, got ${values.length}`);
               continue;
             }
             
@@ -119,22 +144,20 @@ export function CSVUploadForm() {
             
             headers.forEach((header, index) => {
               if (values[index]) {
-                contact[header] = values[index].trim();
+                // Trim quotes if present
+                let value = values[index].trim();
+                if (value.startsWith('"') && value.endsWith('"')) {
+                  value = value.substring(1, value.length - 1);
+                }
+                contact[header] = value;
               }
             });
             
-            // Fill in required fields if missing
-            if (!contact.company) contact.company = "Unknown Company";
-            if (!contact.position) contact.position = "Unknown Position";
-            if (!contact.location) contact.location = "Unknown Location";
+            // Check if the contact has the required fields
+            const missingRequired = requiredColumns.filter(col => !contact[col]);
             
-            // Check if the contact has both first and last name
-            if (!contact.first_name || !contact.last_name) {
-              toast({
-                title: "Invalid Contact Data",
-                description: `Row ${i} is missing first name or last name`,
-                variant: "destructive",
-              });
+            if (missingRequired.length > 0) {
+              console.log(`Row ${i} missing required fields: ${missingRequired.join(", ")}`);
               continue;
             }
             
@@ -152,10 +175,13 @@ export function CSVUploadForm() {
               description: "No valid contacts were found in the CSV file.",
               variant: "destructive",
             });
+            setIsUploading(false);
+            setProgress(0);
             return;
           }
           
           setProgress(70);
+          console.log("Contacts to insert:", contacts);
           
           // Insert contacts in batches to avoid hitting limits
           const batchSize = 20;
@@ -308,3 +334,4 @@ export function CSVUploadForm() {
     </div>
   );
 }
+
