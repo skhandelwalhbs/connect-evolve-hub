@@ -17,11 +17,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Clock } from "lucide-react";
 import { AddReminderDialog } from "@/components/crm/AddReminderDialog";
-import { TagSelector } from "@/components/tags/TagSelector";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
-type Tag = Database['public']['Tables']['tags']['Row'];
 
 interface EditContactDialogProps {
   contact: Contact | null;
@@ -34,8 +32,6 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
   const [formData, setFormData] = useState<Partial<Contact>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
-  const [isLoadingTags, setIsLoadingTags] = useState(false);
   const { toast } = useToast();
 
   // Initialize form data when contact changes or dialog opens
@@ -52,67 +48,15 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
         url: contact.url,
         notes: contact.notes,
       });
-
-      // Load contact tags
-      fetchContactTags(contact.id);
     } else {
       setFormData({});
-      setSelectedTags([]);
     }
   }, [contact, open]);
-
-  // Fetch tags for this contact
-  const fetchContactTags = async (contactId: string) => {
-    setIsLoadingTags(true);
-    try {
-      // First get the tag IDs related to this contact
-      const { data: contactTagsData, error: contactTagsError } = await supabase
-        .from('contact_tags')
-        .select('tag_id')
-        .eq('contact_id', contactId);
-      
-      if (contactTagsError) {
-        throw contactTagsError;
-      }
-      
-      if (contactTagsData && contactTagsData.length > 0) {
-        // Get the actual tag objects using the tag IDs
-        const tagIds = contactTagsData.map(item => item.tag_id);
-        
-        const { data: tagsData, error: tagsError } = await supabase
-          .from('tags')
-          .select('*')
-          .in('id', tagIds);
-        
-        if (tagsError) {
-          throw tagsError;
-        }
-        
-        setSelectedTags(tagsData || []);
-      } else {
-        setSelectedTags([]);
-      }
-    } catch (error) {
-      console.error("Error fetching contact tags:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load contact tags.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingTags(false);
-    }
-  };
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle tags change
-  const handleTagsChange = (tags: Tag[]) => {
-    setSelectedTags(tags);
   };
 
   // Handle form submission
@@ -137,42 +81,26 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
     setIsSubmitting(true);
     
     try {
-      // Update contact information
       const { error } = await supabase
         .from('contacts')
         .update(formData)
         .eq('id', contact.id);
       
       if (error) {
-        throw error;
+        console.error("Error updating contact:", error);
+        toast({
+          title: "Update failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Contact updated successfully",
+        });
+        onSuccess();
+        onOpenChange(false);
       }
-
-      // Update contact tags
-      // First delete all existing tags for this contact
-      await supabase.from('contact_tags').delete().eq('contact_id', contact.id);
-      
-      // Then add the newly selected tags
-      if (selectedTags.length > 0) {
-        const tagAssignments = selectedTags.map(tag => ({
-          contact_id: contact.id,
-          tag_id: tag.id,
-        }));
-        
-        const { error: tagError } = await supabase
-          .from('contact_tags')
-          .insert(tagAssignments);
-        
-        if (tagError) {
-          throw tagError;
-        }
-      }
-      
-      toast({
-        title: "Success",
-        description: "Contact updated successfully",
-      });
-      onSuccess();
-      onOpenChange(false);
     } catch (err) {
       console.error("Unexpected error:", err);
       toast({
@@ -299,15 +227,6 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
                   value={formData.url || ""}
                   onChange={handleChange}
                   placeholder="https://linkedin.com/in/username"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Tags</Label>
-                <TagSelector
-                  contactId={contact.id}
-                  selectedTags={selectedTags}
-                  onTagsChange={handleTagsChange}
                 />
               </div>
               

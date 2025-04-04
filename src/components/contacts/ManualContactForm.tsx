@@ -1,10 +1,17 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -16,16 +23,11 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { TagSelector } from "@/components/tags/TagSelector";
-import type { Database } from "@/integrations/supabase/types";
-
-type Tag = Database['public']['Tables']['tags']['Row'];
 
 export function ManualContactForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -88,25 +90,6 @@ export function ManualContactForm() {
         });
         return;
       }
-
-      // If we have selected tags, associate them with the contact
-      if (data && data.length > 0 && selectedTags.length > 0) {
-        const contactId = data[0].id;
-        
-        const tagAssignments = selectedTags.map(tag => ({
-          contact_id: contactId,
-          tag_id: tag.id,
-        }));
-        
-        const { error: tagError } = await supabase
-          .from('contact_tags')
-          .insert(tagAssignments);
-        
-        if (tagError) {
-          console.error("Error adding tags to contact:", tagError);
-          // We won't block the UI for tag errors, just log them
-        }
-      }
       
       // Success
       toast({
@@ -127,11 +110,6 @@ export function ManualContactForm() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Handle tag changes
-  const handleTagsChange = (tags: Tag[]) => {
-    setSelectedTags(tags);
   };
 
   return (
@@ -244,14 +222,6 @@ export function ManualContactForm() {
             placeholder="https://example.com"
             value={formData.url}
             onChange={(e) => handleChange("url", e.target.value)}
-          />
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="tags">Tags</Label>
-          <TagSelector
-            selectedTags={selectedTags}
-            onTagsChange={handleTagsChange}
           />
         </div>
         
