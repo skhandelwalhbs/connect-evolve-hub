@@ -56,11 +56,13 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
           variant: "destructive",
         });
       } else {
-        setReminders(data || []);
+        // Explicitly cast data to Reminder[] to ensure type safety
+        const typedData = (data || []) as Reminder[];
+        setReminders(typedData);
         
         // Split reminders into active and completed
-        const active = data?.filter(reminder => reminder.is_active) || [];
-        const completed = data?.filter(reminder => !reminder.is_active) || [];
+        const active = typedData.filter(reminder => reminder.is_active);
+        const completed = typedData.filter(reminder => !reminder.is_active);
         
         setActiveReminders(active);
         setCompletedReminders(completed);
