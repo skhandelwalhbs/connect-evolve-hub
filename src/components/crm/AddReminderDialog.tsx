@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { generateGoogleCalendarUrl } from "@/lib/calendar-utils";
+import type { Database } from "@/integrations/supabase/types";
 
 interface AddReminderDialogProps {
   contactId: string;
@@ -20,6 +21,9 @@ interface AddReminderDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
+
+// Define a type for the reminder to ensure we have proper type checking
+type Reminder = Database['public']['Tables']['contact_reminders']['Row'];
 
 const CHANNEL_OPTIONS = [
   "Email",
@@ -58,13 +62,13 @@ export function AddReminderDialog({ contactId, open, onOpenChange, onSuccess }: 
     
     // Combine date and time
     const [hours, minutes] = time.split(":").map(Number);
-    const reminderDate = new Date(date);
+    const reminderDate = new Date(date!);
     reminderDate.setHours(hours, minutes);
 
     try {
-      // Use the correct type casting approach for consistency
+      // Explicitly type the response from Supabase
       const { data, error } = await supabase
-        .from('contact_reminders' as any)
+        .from('contact_reminders')
         .insert({
           contact_id: contactId,
           title,
@@ -73,7 +77,7 @@ export function AddReminderDialog({ contactId, open, onOpenChange, onSuccess }: 
           notes,
           is_active: true,
           user_id: (await supabase.auth.getUser()).data.user?.id
-        } as unknown as any)
+        })
         .select();
       
       if (error) {
@@ -86,10 +90,13 @@ export function AddReminderDialog({ contactId, open, onOpenChange, onSuccess }: 
       } else {
         // Show the calendar option after successful creation
         setShowCalendarOption(true);
-        // Fix the TypeScript error by using optional chaining and checking if data exists and has elements
-        if (data && Array.isArray(data) && data.length > 0) {
-          setNewReminderId(data[0].id);
+        
+        // Properly type check and access data - now TypeScript knows data is an array of Reminder objects
+        const reminders = data as Reminder[];
+        if (reminders && reminders.length > 0) {
+          setNewReminderId(reminders[0].id);
         }
+        
         toast({
           title: "Reminder Created",
           description: "Your reminder has been successfully created.",
