@@ -57,17 +57,15 @@ const AppSidebar = () => {
       <SidebarContent className="py-2">
         <div className="px-3 py-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Connect Hub</h2>
+            <h2 className={`text-lg font-semibold ${!open ? 'sr-only' : ''}`}>Connect Hub</h2>
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => setOpen(!open)}
               className="h-7 w-7"
+              aria-label={open ? 'Collapse sidebar' : 'Expand sidebar'}
             >
               {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              <span className="sr-only">
-                {open ? 'Collapse sidebar' : 'Expand sidebar'}
-              </span>
             </Button>
           </div>
           <nav className="space-y-1">
@@ -77,7 +75,7 @@ const AppSidebar = () => {
                 location.pathname === "/dashboard" ? "bg-secondary" : "hover:bg-secondary"
               }`}
             >
-              <span>Dashboard</span>
+              <span className={!open ? 'sr-only' : ''}>Dashboard</span>
             </Link>
             <Link 
               to="/contacts" 
@@ -85,7 +83,7 @@ const AppSidebar = () => {
                 location.pathname === "/contacts" ? "bg-secondary" : "hover:bg-secondary"
               }`}
             >
-              <span>Contacts</span>
+              <span className={!open ? 'sr-only' : ''}>Contacts</span>
             </Link>
             <Link 
               to="/crm" 
@@ -93,7 +91,7 @@ const AppSidebar = () => {
                 location.pathname === "/crm" ? "bg-secondary" : "hover:bg-secondary"
               }`}
             >
-              <span>CRM</span>
+              <span className={!open ? 'sr-only' : ''}>CRM</span>
             </Link>
             <Link 
               to="/reminders" 
@@ -102,13 +100,13 @@ const AppSidebar = () => {
               }`}
             >
               <CalendarClock className="h-4 w-4 mr-2" />
-              <span>Reminders</span>
+              <span className={!open ? 'sr-only' : ''}>Reminders</span>
             </Link>
             <div className="pt-4 pb-2">
-              <Button className="w-full" asChild>
+              <Button className={`${open ? 'w-full' : 'w-auto'}`} asChild>
                 <Link to="/contacts/add">
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Add Contact
+                  <span className={!open ? 'sr-only' : ''}>Add Contact</span>
                 </Link>
               </Button>
             </div>
