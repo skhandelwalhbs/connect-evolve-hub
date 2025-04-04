@@ -303,15 +303,6 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
               </div>
               
               <div className="space-y-2">
-                <Label>Tags</Label>
-                <TagSelector
-                  contactId={contact.id}
-                  selectedTags={selectedTags}
-                  onTagsChange={handleTagsChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
@@ -319,6 +310,16 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
                   value={formData.notes || ""}
                   onChange={handleChange}
                   rows={3}
+                />
+              </div>
+              
+              {/* Tags moved to the bottom of the form */}
+              <div className="space-y-2">
+                <Label>Tags</Label>
+                <TagSelector
+                  contactId={contact.id}
+                  selectedTags={selectedTags}
+                  onTagsChange={handleTagsChange}
                 />
               </div>
             </form>

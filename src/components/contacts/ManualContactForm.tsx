@@ -247,14 +247,6 @@ export function ManualContactForm() {
         </div>
         
         <div className="grid gap-2">
-          <Label htmlFor="tags">Tags</Label>
-          <TagSelector
-            selectedTags={selectedTags}
-            onTagsChange={handleTagsChange}
-          />
-        </div>
-        
-        <div className="grid gap-2">
           <Label htmlFor="notes">Notes</Label>
           <Textarea
             id="notes"
@@ -262,6 +254,15 @@ export function ManualContactForm() {
             value={formData.notes}
             onChange={(e) => handleChange("notes", e.target.value)}
             rows={3}
+          />
+        </div>
+        
+        {/* Tags moved to the bottom of the form */}
+        <div className="grid gap-2">
+          <Label htmlFor="tags">Tags</Label>
+          <TagSelector
+            selectedTags={selectedTags}
+            onTagsChange={handleTagsChange}
           />
         </div>
         

@@ -127,7 +127,7 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
         <PopoverContent 
           className="w-full p-0" 
           align="start"
-          style={{ zIndex: 100 }}
+          style={{ zIndex: 9999 }} // Highest possible z-index to ensure it's always on top
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
