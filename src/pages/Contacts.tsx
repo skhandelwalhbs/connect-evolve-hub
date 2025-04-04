@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { Search, Mail, Phone, UserPlus, Pencil, Trash2, MapPin, Briefcase, User, Clock, Link2 } from "lucide-react";
+import { Search, Mail, Phone, UserPlus, Pencil, Trash2, MapPin, Briefcase, User, Clock, Link2, Tag as TagIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
@@ -25,9 +26,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EditContactDialog } from "@/components/contacts/EditContactDialog";
+import { Tag } from "@/components/tags/Tag";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
+type TagType = Database['public']['Tables']['tags']['Row'];
 
 export default function Contacts() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,6 +38,7 @@ export default function Contacts() {
   const [isLoading, setIsLoading] = useState(true);
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   const [contactToEdit, setContactToEdit] = useState<Contact | null>(null);
+  const [contactTags, setContactTags] = useState<Record<string, TagType[]>>({});
   const { toast } = useToast();
   
   // Fetch contacts on component mount
@@ -59,11 +63,72 @@ export default function Contacts() {
         });
       } else {
         setContacts(data || []);
+        if (data && data.length > 0) {
+          fetchContactTags(data.map(contact => contact.id));
+        }
       }
     } catch (err) {
       console.error("Unexpected error:", err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fetch tags for all contacts
+  const fetchContactTags = async (contactIds: string[]) => {
+    try {
+      // First get all contact_tags relationships for these contacts
+      const { data: relationships, error: relError } = await supabase
+        .from('contact_tags')
+        .select('contact_id, tag_id')
+        .in('contact_id', contactIds);
+      
+      if (relError) {
+        console.error("Error fetching tag relationships:", relError);
+        return;
+      }
+      
+      if (!relationships || relationships.length === 0) {
+        return;
+      }
+      
+      // Get all unique tag IDs from these relationships
+      const tagIds = [...new Set(relationships.map(rel => rel.tag_id))];
+      
+      // Fetch all of these tags at once
+      const { data: tags, error: tagError } = await supabase
+        .from('tags')
+        .select('*')
+        .in('id', tagIds);
+        
+      if (tagError) {
+        console.error("Error fetching tags:", tagError);
+        return;
+      }
+      
+      if (!tags) {
+        return;
+      }
+      
+      // Create a map of contact IDs to tags
+      const tagsMap: Record<string, TagType[]> = {};
+      
+      // For each contact, find all their tags
+      contactIds.forEach(contactId => {
+        const contactTagIds = relationships
+          .filter(rel => rel.contact_id === contactId)
+          .map(rel => rel.tag_id);
+          
+        const contactTagsArray = tags.filter(tag => contactTagIds.includes(tag.id));
+        
+        if (contactTagsArray.length > 0) {
+          tagsMap[contactId] = contactTagsArray;
+        }
+      });
+      
+      setContactTags(tagsMap);
+    } catch (error) {
+      console.error("Error in fetchContactTags:", error);
     }
   };
 
@@ -121,12 +186,20 @@ export default function Contacts() {
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Contacts</h1>
-        <Button asChild>
-          <Link to="/contacts/add">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add Contact
-          </Link>
-        </Button>
+        <div className="flex space-x-2">
+          <Button variant="outline" asChild>
+            <Link to="/tags">
+              <TagIcon className="mr-2 h-4 w-4" />
+              Manage Tags
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to="/contacts/add">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Contact
+            </Link>
+          </Button>
+        </div>
       </div>
       
       <div className="flex items-center mb-6">
@@ -174,6 +247,7 @@ export default function Contacts() {
                 <TableHead>Location</TableHead>
                 <TableHead>Contact Info</TableHead>
                 <TableHead>URL</TableHead>
+                <TableHead>Tags</TableHead>
                 <TableHead>Added</TableHead>
                 <TableHead>Updated</TableHead>
                 <TableHead>Notes</TableHead>
@@ -237,6 +311,20 @@ export default function Contacts() {
                         </a>
                       </div>
                     ) : "-"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1 min-w-[100px] max-w-[200px]">
+                      {contactTags[contact.id] && contactTags[contact.id].length > 0 ? (
+                        contactTags[contact.id].map(tag => (
+                          <Tag key={tag.id} tag={tag} className="text-xs" />
+                        ))
+                      ) : (
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <TagIcon className="h-3.5 w-3.5 mr-1.5" />
+                          No tags
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm">
                     <div className="flex items-center">
