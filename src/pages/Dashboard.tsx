@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { Users, Calendar, CheckSquare, Mail, Phone, UserPlus } from "lucide-react";
+import { Users, Calendar, Mail, Phone, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
@@ -97,7 +96,7 @@ export default function Dashboard() {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
@@ -131,20 +130,9 @@ export default function Dashboard() {
             </CardContent>
           </Link>
         </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Active Goals</CardTitle>
-            <CheckSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Create networking goals</p>
-          </CardContent>
-        </Card>
       </div>
       
-      <div className="grid grid-cols-1 gap-6 mt-6 lg:grid-cols-2">
+      <div className="mt-6">
         <Card className="col-span-1">
           <CardHeader>
             <CardTitle>Recent Contacts</CardTitle>
@@ -193,18 +181,6 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-        
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle>Recommended Actions</CardTitle>
-            <CardDescription>People you might want to reconnect with</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              Add contacts to see recommendations
-            </div>
           </CardContent>
         </Card>
       </div>
