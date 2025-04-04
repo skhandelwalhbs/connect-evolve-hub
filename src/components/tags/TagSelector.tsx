@@ -51,6 +51,7 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
         throw error;
       }
       
+      console.log("Fetched tags:", data);
       setTags(data || []);
     } catch (error) {
       console.error("Error fetching tags:", error);
@@ -65,19 +66,30 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
   };
 
   const handleSelectTag = (selectedTag: TagType) => {
+    console.log("Tag selected:", selectedTag);
+    
     // Check if tag is already selected
     const isSelected = selectedTags.some(tag => tag.id === selectedTag.id);
+    console.log("Is already selected:", isSelected);
     
     if (isSelected) {
       // Remove tag
-      onTagsChange(selectedTags.filter(tag => tag.id !== selectedTag.id));
+      const newTags = selectedTags.filter(tag => tag.id !== selectedTag.id);
+      console.log("Removing tag, new tags:", newTags);
+      onTagsChange(newTags);
     } else {
       // Add tag
-      onTagsChange([...selectedTags, selectedTag]);
+      const newTags = [...selectedTags, selectedTag];
+      console.log("Adding tag, new tags:", newTags);
+      onTagsChange(newTags);
     }
+    
+    // Don't close the popover when selecting tags
+    // This allows users to select multiple tags without reopening the popover
   };
 
   const handleRemoveTag = (tagId: string) => {
+    console.log("Removing tag with ID:", tagId);
     onTagsChange(selectedTags.filter(tag => tag.id !== tagId));
   };
 
@@ -119,17 +131,22 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
                   return (
                     <CommandItem
                       key={tag.id}
-                      onSelect={() => handleSelectTag(tag)}
-                      className="flex items-center"
+                      value={tag.id}
+                      onSelect={() => {
+                        console.log(`CommandItem onSelect fired for tag: ${tag.name}`);
+                        handleSelectTag(tag);
+                      }}
                     >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isSelected ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <div className="flex-1">
-                        <Tag tag={tag} />
+                      <div className="flex items-center w-full mr-2">
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            isSelected ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <div className="flex-1">
+                          <Tag tag={tag} />
+                        </div>
                       </div>
                     </CommandItem>
                   );
