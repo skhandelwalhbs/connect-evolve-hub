@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -31,9 +31,9 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Initialize form data when contact changes
-  const resetFormData = () => {
-    if (contact) {
+  // Initialize form data when contact changes or dialog opens
+  useEffect(() => {
+    if (contact && open) {
       setFormData({
         first_name: contact.first_name,
         last_name: contact.last_name,
@@ -48,15 +48,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
     } else {
       setFormData({});
     }
-  };
-
-  // Reset form when dialog opens
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      resetFormData();
-    }
-    onOpenChange(open);
-  };
+  }, [contact, open]);
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -121,7 +113,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
   if (!contact) return null;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit Contact</DialogTitle>
