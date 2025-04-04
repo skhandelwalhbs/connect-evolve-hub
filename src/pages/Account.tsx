@@ -26,16 +26,104 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Account() {
+  const { user } = useAuth();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [password, setPassword] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDeleteAccount = () => {
     // In a real app, we would call an API to delete the account
     console.log("Account deletion requested");
     setIsDeleteDialogOpen(false);
     // Redirect to login page or show confirmation
+  };
+
+  const handleUpdateUsername = async () => {
+    if (!newUsername || newUsername.trim() === "") {
+      toast({
+        title: "Error",
+        description: "Username cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { username: newUsername }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Username updated successfully",
+      });
+      setNewUsername("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update username",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Password updated successfully",
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -54,25 +142,71 @@ export default function Account() {
         <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
+              <CardTitle>Profile Settings</CardTitle>
               <CardDescription>
-                Manage your personal information
+                Manage your account information
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="Your name" />
+            <CardContent className="space-y-8">
+              {/* Change Username Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Change Username</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    value={user?.email || ""} 
+                    disabled 
+                    className="bg-gray-50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-username">New Username</Label>
+                  <Input 
+                    id="new-username" 
+                    placeholder="Enter new username" 
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                  />
+                </div>
+                <Button 
+                  onClick={handleUpdateUsername} 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Updating..." : "Update Username"}
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" placeholder="Your email" type="email" />
+              
+              {/* Change Password Section */}
+              <div className="space-y-4 pt-4 border-t border-gray-200">
+                <h3 className="text-lg font-medium">Change Password</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <Input 
+                    id="new-password" 
+                    type="password" 
+                    placeholder="New password" 
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                  <Input 
+                    id="confirm-new-password" 
+                    type="password" 
+                    placeholder="Confirm new password" 
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+                <Button 
+                  onClick={handleUpdatePassword} 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Updating..." : "Update Password"}
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="••••••••" />
-              </div>
-              <Button>Save Changes</Button>
             </CardContent>
           </Card>
         </TabsContent>
