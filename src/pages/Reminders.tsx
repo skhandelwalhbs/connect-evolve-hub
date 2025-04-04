@@ -49,7 +49,8 @@ export default function Reminders() {
             company,
             position,
             email,
-            phone
+            phone,
+            location
           )
         `)
         .eq('user_id', userId)

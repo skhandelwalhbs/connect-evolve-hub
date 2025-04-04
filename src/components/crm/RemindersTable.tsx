@@ -3,11 +3,12 @@ import { useState } from "react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MessageSquare, CalendarPlus } from "lucide-react";
+import { Calendar, Clock, MessageSquare, CalendarPlus, ExternalLink } from "lucide-react";
 import type { Reminder } from "./EditReminderDialog";
 import { AddInteractionDialog } from "./AddInteractionDialog";
 import type { Database } from "@/integrations/supabase/types";
 import { generateGoogleCalendarUrl } from "@/lib/calendar-utils";
+import { Link } from "react-router-dom";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
 
@@ -87,6 +88,9 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
               <TableHead>Status</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Channel</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Company</TableHead>
+              <TableHead>Location</TableHead>
               <TableHead>Reminder Date</TableHead>
               <TableHead>Created On</TableHead>
               <TableHead>Completed On</TableHead>
@@ -96,7 +100,7 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
           <TableBody>
             {sortedReminders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-4 text-muted-foreground">
                   No reminders found
                 </TableCell>
               </TableRow>
@@ -113,6 +117,17 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
                     <Badge variant={getBadgeVariant(reminder.channel) as any}>
                       {reminder.channel}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {reminder.contacts ? 
+                      `${reminder.contacts.first_name} ${reminder.contacts.last_name}` : 
+                      "-"}
+                  </TableCell>
+                  <TableCell>
+                    {reminder.contacts?.company || "-"}
+                  </TableCell>
+                  <TableCell>
+                    {reminder.contacts?.location || "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">
@@ -138,6 +153,18 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      {reminder.contacts && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          asChild
+                        >
+                          <Link to={`/crm/${reminder.contact_id}`}>
+                            <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                            View Contact
+                          </Link>
+                        </Button>
+                      )}
                       {reminder.is_active && (
                         <Button 
                           variant="outline" 
