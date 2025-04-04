@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, Clock } from "lucide-react";
+import { CalendarIcon, Clock, CalendarPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { generateGoogleCalendarUrl } from "@/lib/calendar-utils";
 
 // Define a custom type for Reminders until Supabase types are updated
 export interface Reminder {
@@ -60,6 +60,29 @@ export function EditReminderDialog({ reminder, open, onOpenChange, onSuccess }: 
     const minutes = reminderDate.getMinutes().toString().padStart(2, '0');
     setTime(`${hours}:${minutes}`);
   }, [reminder]);
+
+  const handleAddToGoogleCalendar = () => {
+    const reminderDate = new Date(date);
+    
+    // Set time from the time input
+    if (time) {
+      const [hours, minutes] = time.split(":").map(Number);
+      reminderDate.setHours(hours, minutes);
+    }
+    
+    // Default end time is 1 hour after start time
+    const endDate = new Date(reminderDate.getTime() + 60 * 60 * 1000);
+    
+    const calendarUrl = generateGoogleCalendarUrl({
+      title: `${title} - ${channel} Reminder`,
+      startDate: reminderDate,
+      endDate: endDate,
+      description: notes || `${channel} follow-up reminder`,
+    });
+    
+    // Open Google Calendar in a new tab
+    window.open(calendarUrl, "_blank");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,6 +225,17 @@ export function EditReminderDialog({ reminder, open, onOpenChange, onSuccess }: 
           </div>
           
           <DialogFooter>
+            <div className="flex items-center gap-2 mr-auto">
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={handleAddToGoogleCalendar}
+              >
+                <CalendarPlus className="h-4 w-4 mr-2" />
+                Add to Calendar
+              </Button>
+            </div>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

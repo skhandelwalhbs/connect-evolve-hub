@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MessageSquare } from "lucide-react";
+import { Calendar, Clock, MessageSquare, CalendarPlus } from "lucide-react";
 import type { Reminder } from "./EditReminderDialog";
 import { AddInteractionDialog } from "./AddInteractionDialog";
 import type { Database } from "@/integrations/supabase/types";
+import { generateGoogleCalendarUrl } from "@/lib/calendar-utils";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
 
@@ -34,6 +35,23 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
   const handleInteractionAdded = () => {
     setShowAddInteractionDialog(false);
     setSelectedReminder(null);
+  };
+  
+  const handleAddToGoogleCalendar = (reminder: Reminder) => {
+    const reminderDate = new Date(reminder.date);
+    // Default end time is 1 hour after start time
+    const endDate = new Date(reminderDate.getTime() + 60 * 60 * 1000);
+    
+    const calendarUrl = generateGoogleCalendarUrl({
+      title: `${reminder.title} - ${reminder.channel} Reminder`,
+      startDate: reminderDate,
+      endDate: endDate,
+      description: reminder.notes || `${reminder.channel} follow-up reminder`,
+      location: contact?.location || ""
+    });
+    
+    // Open Google Calendar in new tab
+    window.open(calendarUrl, "_blank");
   };
 
   const getBadgeVariant = (channel: string) => {
@@ -119,14 +137,26 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleLogInteraction(reminder)}
-                    >
-                      <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-                      Log Interaction
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      {reminder.is_active && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleAddToGoogleCalendar(reminder)}
+                        >
+                          <CalendarPlus className="h-3.5 w-3.5 mr-1.5" />
+                          Add to Calendar
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleLogInteraction(reminder)}
+                      >
+                        <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                        Log Interaction
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
