@@ -81,6 +81,7 @@ export function EditReminderDialog({ reminder, open, onOpenChange, onSuccess }: 
     reminderDate.setHours(hours, minutes);
 
     try {
+      // Use the correct type casting approach for consistency
       const { error } = await supabase
         .from('contact_reminders' as any)
         .update({
@@ -89,7 +90,7 @@ export function EditReminderDialog({ reminder, open, onOpenChange, onSuccess }: 
           channel,
           notes,
           updated_at: new Date().toISOString()
-        } as any)
+        } as unknown as any)
         .eq('id', reminder.id);
       
       if (error) {

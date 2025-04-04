@@ -56,8 +56,8 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
           variant: "destructive",
         });
       } else {
-        // Explicitly cast data to Reminder[] to ensure type safety
-        const typedData = (data || []) as Reminder[];
+        // First cast to unknown, then to Reminder[] to safely handle the type conversion
+        const typedData = (data || []) as unknown as Reminder[];
         setReminders(typedData);
         
         // Split reminders into active and completed

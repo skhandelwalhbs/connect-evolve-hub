@@ -59,6 +59,7 @@ export function AddReminderDialog({ contactId, open, onOpenChange, onSuccess }: 
     reminderDate.setHours(hours, minutes);
 
     try {
+      // Use the correct type casting approach for consistency
       const { data, error } = await supabase
         .from('contact_reminders' as any)
         .insert({
@@ -69,7 +70,7 @@ export function AddReminderDialog({ contactId, open, onOpenChange, onSuccess }: 
           notes,
           is_active: true,
           user_id: (await supabase.auth.getUser()).data.user?.id
-        } as any);
+        } as unknown as any);
       
       if (error) {
         console.error("Error creating reminder:", error);
