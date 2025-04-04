@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { Search, Mail, Phone, UserPlus } from "lucide-react";
+import { Search, Mail, Phone, UserPlus, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
@@ -15,6 +15,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { EditContactDialog } from "@/components/contacts/EditContactDialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
@@ -23,36 +34,39 @@ export default function Contacts() {
   const [searchQuery, setSearchQuery] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+  const [contactToEdit, setContactToEdit] = useState<Contact | null>(null);
   const { toast } = useToast();
   
   // Fetch contacts on component mount
   useEffect(() => {
-    async function fetchContacts() {
-      try {
-        const { data, error } = await supabase
-          .from('contacts')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error("Error fetching contacts:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load your contacts. Please try again.",
-            variant: "destructive",
-          });
-        } else {
-          setContacts(data || []);
-        }
-      } catch (err) {
-        console.error("Unexpected error:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     fetchContacts();
-  }, [toast]);
+  }, []);
+  
+  const fetchContacts = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching contacts:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load your contacts. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        setContacts(data || []);
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter contacts based on search query
   const filteredContacts = contacts.filter(contact => {
@@ -64,6 +78,38 @@ export default function Contacts() {
       (contact.company && contact.company.toLowerCase().includes(query))
     );
   });
+
+  // Delete contact function
+  const handleDeleteContact = async () => {
+    if (!contactToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .delete()
+        .eq('id', contactToDelete.id);
+      
+      if (error) {
+        console.error("Error deleting contact:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete the contact. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Contact deleted successfully",
+        });
+        // Refresh contacts list
+        fetchContacts();
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    } finally {
+      setContactToDelete(null);
+    }
+  };
 
   return (
     <MainLayout>
@@ -120,6 +166,7 @@ export default function Contacts() {
                 <TableHead>Company</TableHead>
                 <TableHead>Contact Info</TableHead>
                 <TableHead>Added</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -148,12 +195,59 @@ export default function Contacts() {
                   <TableCell className="text-sm text-muted-foreground">
                     {new Date(contact.created_at).toLocaleDateString()}
                   </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setContactToEdit(contact)}
+                      >
+                        <Pencil className="h-4 w-4 text-muted-foreground" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setContactToDelete(contact)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       )}
+
+      {/* Delete Confirmation Alert */}
+      <AlertDialog open={!!contactToDelete} onOpenChange={(open) => !open && setContactToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {contactToDelete?.first_name} {contactToDelete?.last_name} 
+              from your contacts. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteContact} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Contact Dialog */}
+      <EditContactDialog 
+        contact={contactToEdit}
+        open={!!contactToEdit}
+        onOpenChange={(open) => !open && setContactToEdit(null)}
+        onSuccess={fetchContacts}
+      />
     </MainLayout>
   );
 }
