@@ -65,7 +65,13 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
     }
   };
 
-  const handleSelectTag = (selectedTag: TagType) => {
+  const handleSelectTag = (selectedTag: TagType, e?: React.MouseEvent) => {
+    // Stop propagation to prevent the click from reaching underlying elements
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     console.log("Tag selected:", selectedTag);
     
     // Check if tag is already selected
@@ -118,7 +124,7 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
+        <PopoverContent className="w-full p-0 z-50" align="start">
           <Command>
             <CommandInput placeholder="Search tags..." />
             <CommandList>
@@ -132,12 +138,19 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
                     <CommandItem
                       key={tag.id}
                       value={tag.id}
-                      onSelect={() => {
+                      onSelect={(currentValue) => {
                         console.log(`CommandItem onSelect fired for tag: ${tag.name}`);
                         handleSelectTag(tag);
                       }}
+                      className="cursor-pointer"
                     >
-                      <div className="flex items-center w-full mr-2">
+                      <div 
+                        className="flex items-center w-full mr-2"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Stop propagation to prevent bubbling
+                          handleSelectTag(tag, e);
+                        }}
+                      >
                         <Check
                           className={cn(
                             "mr-2 h-4 w-4",
