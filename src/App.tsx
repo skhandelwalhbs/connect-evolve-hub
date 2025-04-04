@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Contacts from "./pages/Contacts";
+import CRM from "./pages/CRM";
 import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/contacts" element={<Contacts />} />
               <Route path="/contacts/add" element={<AddContact />} />
+              <Route path="/crm" element={<CRM />} />
               <Route path="/account" element={<Account />} />
             </Route>
             
