@@ -20,7 +20,8 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
         <div className="flex-1 flex flex-col">
           <header className="h-16 border-b flex items-center justify-between px-4">
             <div className="flex items-center">
-              <SidebarTrigger asChild>
+              {/* Fix: Remove asChild prop from SidebarTrigger since we're not providing a child component */}
+              <SidebarTrigger>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle sidebar</span>
