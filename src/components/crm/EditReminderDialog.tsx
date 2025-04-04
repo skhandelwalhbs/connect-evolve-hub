@@ -12,9 +12,20 @@ import { CalendarIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import type { Database } from "@/integrations/supabase/types";
 
-type Reminder = Database['public']['Tables']['contact_reminders']['Row'];
+// Define a custom type for Reminders until Supabase types are updated
+export interface Reminder {
+  id: string;
+  contact_id: string;
+  title: string;
+  date: string;
+  channel: string;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+}
 
 interface EditReminderDialogProps {
   reminder: Reminder;
@@ -71,14 +82,14 @@ export function EditReminderDialog({ reminder, open, onOpenChange, onSuccess }: 
 
     try {
       const { error } = await supabase
-        .from('contact_reminders')
+        .from('contact_reminders' as any)
         .update({
           title,
           date: reminderDate.toISOString(),
           channel,
           notes,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', reminder.id);
       
       if (error) {

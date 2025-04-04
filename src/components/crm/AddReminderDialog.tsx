@@ -60,7 +60,7 @@ export function AddReminderDialog({ contactId, open, onOpenChange, onSuccess }: 
 
     try {
       const { data, error } = await supabase
-        .from('contact_reminders')
+        .from('contact_reminders' as any)
         .insert({
           contact_id: contactId,
           title,
@@ -69,7 +69,7 @@ export function AddReminderDialog({ contactId, open, onOpenChange, onSuccess }: 
           notes,
           is_active: true,
           user_id: (await supabase.auth.getUser()).data.user?.id
-        });
+        } as any);
       
       if (error) {
         console.error("Error creating reminder:", error);

@@ -18,9 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { Database } from "@/integrations/supabase/types";
-
-type Reminder = Database['public']['Tables']['contact_reminders']['Row'];
+import { Reminder } from "./EditReminderDialog";
 
 interface RemindersSectionProps {
   contactId: string;
@@ -45,7 +43,7 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('contact_reminders')
+        .from('contact_reminders' as any)
         .select('*')
         .eq('contact_id', contactId)
         .order('date', { ascending: true });
@@ -91,7 +89,7 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
     
     try {
       const { error } = await supabase
-        .from('contact_reminders')
+        .from('contact_reminders' as any)
         .delete()
         .eq('id', reminderToDelete.id);
       
@@ -119,8 +117,8 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
   const handleCompleteReminder = async (reminder: Reminder) => {
     try {
       const { error } = await supabase
-        .from('contact_reminders')
-        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .from('contact_reminders' as any)
+        .update({ is_active: false, updated_at: new Date().toISOString() } as any)
         .eq('id', reminder.id);
       
       if (error) {
