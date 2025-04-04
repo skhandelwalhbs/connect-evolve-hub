@@ -27,7 +27,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     <div className="min-h-screen flex flex-col w-full">
       <header className="h-16 border-b flex items-center justify-between px-4 sticky top-0 bg-background z-10 shadow-sm">
         <div className="flex items-center">
-          <h1 className="text-xl font-semibold mr-6">Connect Hub</h1>
+          <h1 className="text-xl font-semibold mr-6 text-primary">Nubble</h1>
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
@@ -102,4 +102,3 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     </div>
   );
 };
-
