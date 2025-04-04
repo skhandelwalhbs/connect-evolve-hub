@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { AddReminderDialog } from "./AddReminderDialog";
 import { EditReminderDialog } from "./EditReminderDialog";
+import { AddInteractionDialog } from "./AddInteractionDialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -31,8 +32,10 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
   const [showAddReminderDialog, setShowAddReminderDialog] = useState(false);
   const [reminderToEdit, setReminderToEdit] = useState<Reminder | null>(null);
   const [reminderToDelete, setReminderToDelete] = useState<Reminder | null>(null);
+  const [reminderToComplete, setReminderToComplete] = useState<Reminder | null>(null);
   const [showCompletedReminders, setShowCompletedReminders] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddInteractionDialog, setShowAddInteractionDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -86,6 +89,10 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
     setReminderToDelete(reminder);
   };
 
+  const handleInitiateComplete = (reminder: Reminder) => {
+    setReminderToComplete(reminder);
+  };
+
   const confirmDeleteReminder = async () => {
     if (!reminderToDelete) return;
     
@@ -116,12 +123,14 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
     }
   };
 
-  const handleCompleteReminder = async (reminder: Reminder) => {
+  const handleCompleteReminder = async (logInteraction: boolean) => {
+    if (!reminderToComplete) return;
+    
     try {
       const { error } = await supabase
         .from('contact_reminders' as any)
-        .update({ is_active: false, updated_at: new Date().toISOString() } as any)
-        .eq('id', reminder.id);
+        .update({ is_active: false, updated_at: new Date().toISOString() } as unknown as any)
+        .eq('id', reminderToComplete.id);
       
       if (error) {
         console.error("Error completing reminder:", error);
@@ -135,10 +144,17 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
           title: "Success",
           description: "Reminder marked as completed",
         });
+        
+        if (logInteraction) {
+          setShowAddInteractionDialog(true);
+        }
+        
         fetchReminders();
       }
     } catch (err) {
       console.error("Unexpected error:", err);
+    } finally {
+      setReminderToComplete(null);
     }
   };
 
@@ -157,6 +173,14 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
     toast({
       title: "Success",
       description: "Reminder updated successfully",
+    });
+  };
+
+  const handleInteractionAdded = () => {
+    setShowAddInteractionDialog(false);
+    toast({
+      title: "Success",
+      description: "Interaction logged successfully",
     });
   };
 
@@ -226,7 +250,7 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
               )}
               
               <div className="flex space-x-2 mt-3">
-                <Button variant="outline" size="sm" onClick={() => handleCompleteReminder(reminder)}>
+                <Button variant="outline" size="sm" onClick={() => handleInitiateComplete(reminder)}>
                   <Check className="h-3.5 w-3.5 mr-1.5" />
                   Complete
                 </Button>
@@ -303,6 +327,26 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
         />
       )}
 
+      {/* Complete Reminder Confirmation Dialog */}
+      <AlertDialog open={!!reminderToComplete} onOpenChange={(open) => !open && setReminderToComplete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Complete Reminder</AlertDialogTitle>
+            <AlertDialogDescription>
+              Would you like to log an interaction for this completed reminder?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => handleCompleteReminder(false)}>
+              No, Just Complete
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleCompleteReminder(true)} className="bg-primary">
+              Yes, Log Interaction
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!reminderToDelete} onOpenChange={(open) => !open && setReminderToDelete(null)}>
         <AlertDialogContent>
@@ -320,6 +364,20 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add Interaction Dialog */}
+      {showAddInteractionDialog && reminderToComplete && (
+        <AddInteractionDialog
+          contact={{ id: contactId } as any}
+          open={showAddInteractionDialog}
+          onOpenChange={setShowAddInteractionDialog}
+          onSuccess={handleInteractionAdded}
+          defaultValues={{
+            type: reminderToComplete.channel as any,
+            notes: `Completed reminder: ${reminderToComplete.title}\n\n${reminderToComplete.notes || ""}`
+          }}
+        />
+      )}
     </div>
   );
 }

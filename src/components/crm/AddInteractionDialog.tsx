@@ -19,25 +19,32 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
+type InteractionType = "Call" | "Meeting" | "Email" | "Follow-up" | "Other";
+
+interface DefaultInteractionValues {
+  type?: InteractionType;
+  notes?: string;
+  date?: string;
+}
 
 interface AddInteractionDialogProps {
   contact: Contact;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  defaultValues?: DefaultInteractionValues;
 }
-
-type InteractionType = "Call" | "Meeting" | "Email" | "Follow-up" | "Other";
 
 export function AddInteractionDialog({ 
   contact, 
   open, 
   onOpenChange, 
-  onSuccess 
+  onSuccess,
+  defaultValues
 }: AddInteractionDialogProps) {
-  const [type, setType] = useState<InteractionType>("Call");
-  const [notes, setNotes] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [type, setType] = useState<InteractionType>(defaultValues?.type || "Call");
+  const [notes, setNotes] = useState(defaultValues?.notes || "");
+  const [date, setDate] = useState(defaultValues?.date || new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -86,9 +93,9 @@ export function AddInteractionDialog({
       } else {
         onSuccess();
         onOpenChange(false);
-        setType("Call");
-        setNotes("");
-        setDate(new Date().toISOString().split('T')[0]);
+        setType(defaultValues?.type || "Call");
+        setNotes(defaultValues?.notes || "");
+        setDate(defaultValues?.date || new Date().toISOString().split('T')[0]);
       }
     } catch (err) {
       console.error("Unexpected error:", err);
