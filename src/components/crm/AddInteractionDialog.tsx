@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -25,6 +25,11 @@ interface AddInteractionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  defaultValues?: {
+    type: "Call" | "Meeting" | "Email" | "Follow-up" | "Other";
+    notes?: string;
+    date?: string;
+  };
 }
 
 type InteractionType = "Call" | "Meeting" | "Email" | "Follow-up" | "Other";
@@ -33,7 +38,8 @@ export function AddInteractionDialog({
   contact, 
   open, 
   onOpenChange, 
-  onSuccess 
+  onSuccess,
+  defaultValues
 }: AddInteractionDialogProps) {
   const [type, setType] = useState<InteractionType>("Call");
   const [notes, setNotes] = useState("");
@@ -41,6 +47,29 @@ export function AddInteractionDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Set default values when dialog opens or default values change
+  useEffect(() => {
+    if (open && defaultValues) {
+      setType(defaultValues.type);
+      setNotes(defaultValues.notes || "");
+      if (defaultValues.date) {
+        setDate(defaultValues.date);
+      }
+    }
+  }, [open, defaultValues]);
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      // Reset to initial values
+      if (!defaultValues) {
+        setType("Call");
+        setNotes("");
+        setDate(new Date().toISOString().split('T')[0]);
+      }
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,9 +115,11 @@ export function AddInteractionDialog({
       } else {
         onSuccess();
         onOpenChange(false);
-        setType("Call");
-        setNotes("");
-        setDate(new Date().toISOString().split('T')[0]);
+        if (!defaultValues) {
+          setType("Call");
+          setNotes("");
+          setDate(new Date().toISOString().split('T')[0]);
+        }
       }
     } catch (err) {
       console.error("Unexpected error:", err);
