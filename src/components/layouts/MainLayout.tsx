@@ -1,8 +1,8 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu, CalendarClock, UserPlus } from "lucide-react";
+import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { Menu, CalendarClock, UserPlus, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/auth/UserMenu";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,12 +50,26 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
 
 const AppSidebar = () => {
   const location = useLocation();
+  const { open, setOpen } = useSidebar();
   
   return (
     <Sidebar>
       <SidebarContent className="py-2">
         <div className="px-3 py-2">
-          <h2 className="text-lg font-semibold mb-4">Connect Hub</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Connect Hub</h2>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setOpen(!open)}
+              className="h-7 w-7"
+            >
+              {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              <span className="sr-only">
+                {open ? 'Collapse sidebar' : 'Expand sidebar'}
+              </span>
+            </Button>
+          </div>
           <nav className="space-y-1">
             <Link 
               to="/dashboard" 
