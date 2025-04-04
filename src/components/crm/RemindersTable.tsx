@@ -3,12 +3,12 @@ import { useState } from "react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MessageSquare, CalendarPlus, ExternalLink } from "lucide-react";
+import { Calendar, Clock, MessageSquare, CalendarPlus, User } from "lucide-react";
 import type { Reminder } from "./EditReminderDialog";
 import { AddInteractionDialog } from "./AddInteractionDialog";
+import { EditContactDialog } from "@/components/contacts/EditContactDialog";
 import type { Database } from "@/integrations/supabase/types";
 import { generateGoogleCalendarUrl } from "@/lib/calendar-utils";
-import { Link } from "react-router-dom";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
 
@@ -18,9 +18,11 @@ interface RemindersTableProps {
   contact: Contact | null;
 }
 
-export function RemindersTable({ reminders, contactId, contact }: RemindersTableProps) {
+export function RemindersTable({ reminders, contactId, contact: initialContact }: RemindersTableProps) {
   const [selectedReminder, setSelectedReminder] = useState<Reminder | null>(null);
   const [showAddInteractionDialog, setShowAddInteractionDialog] = useState(false);
+  const [showEditContactDialog, setShowEditContactDialog] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -28,7 +30,7 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
   };
 
   const handleLogInteraction = (reminder: Reminder) => {
-    if (!contact) return;
+    if (!initialContact) return;
     setSelectedReminder(reminder);
     setShowAddInteractionDialog(true);
   };
@@ -36,6 +38,31 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
   const handleInteractionAdded = () => {
     setShowAddInteractionDialog(false);
     setSelectedReminder(null);
+  };
+  
+  const handleViewContact = (reminder: Reminder) => {
+    if (reminder.contacts) {
+      // Convert the reminder.contacts to the Contact type
+      const contact: Contact = {
+        id: reminder.contacts.id,
+        first_name: reminder.contacts.first_name,
+        last_name: reminder.contacts.last_name,
+        company: reminder.contacts.company,
+        position: reminder.contacts.position,
+        email: reminder.contacts.email || null,
+        phone: reminder.contacts.phone || null,
+        location: reminder.contacts.location || "",
+        url: null,
+        notes: null,
+        user_id: "",
+        created_at: "",
+        updated_at: "",
+        connected_on: null
+      };
+      
+      setSelectedContact(contact);
+      setShowEditContactDialog(true);
+    }
   };
   
   const handleAddToGoogleCalendar = (reminder: Reminder) => {
@@ -48,7 +75,7 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
       startDate: reminderDate,
       endDate: endDate,
       description: reminder.notes || `${reminder.channel} follow-up reminder`,
-      location: contact?.location || ""
+      location: reminder.contacts?.location || ""
     });
     
     // Open Google Calendar in new tab
@@ -78,6 +105,11 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
     // Then sort by date (newest first)
     return new Date(b.date).getTime() - new Date(a.date).getTime();
   });
+
+  const handleContactUpdated = () => {
+    // This will be called when the contact is updated
+    // We could refresh data here if needed
+  };
 
   return (
     <div className="space-y-4">
@@ -157,12 +189,10 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
                         <Button
                           variant="outline"
                           size="sm"
-                          asChild
+                          onClick={() => handleViewContact(reminder)}
                         >
-                          <Link to={`/crm/${reminder.contact_id}`}>
-                            <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                            View Contact
-                          </Link>
+                          <User className="h-3.5 w-3.5 mr-1.5" />
+                          View Contact
                         </Button>
                       )}
                       {reminder.is_active && (
@@ -192,9 +222,9 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
         </Table>
       </div>
 
-      {selectedReminder && contact && (
+      {selectedReminder && initialContact && (
         <AddInteractionDialog
-          contact={contact}
+          contact={initialContact}
           open={showAddInteractionDialog}
           onOpenChange={setShowAddInteractionDialog}
           onSuccess={handleInteractionAdded}
@@ -203,6 +233,16 @@ export function RemindersTable({ reminders, contactId, contact }: RemindersTable
             notes: `Follow-up from reminder: ${selectedReminder.title}\n\n${selectedReminder.notes || ''}`,
             date: new Date().toISOString().split('T')[0]
           }}
+        />
+      )}
+
+      {/* Add EditContactDialog */}
+      {selectedContact && (
+        <EditContactDialog
+          contact={selectedContact}
+          open={showEditContactDialog}
+          onOpenChange={setShowEditContactDialog}
+          onSuccess={handleContactUpdated}
         />
       )}
     </div>
