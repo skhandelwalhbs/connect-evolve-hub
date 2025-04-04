@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { Search, Mail, Phone, UserPlus, Pencil, Trash2, MapPin, Briefcase, User, Clock, Link2 } from "lucide-react";
+import { Search, Mail, Phone, UserPlus, Pencil, Trash2, MapPin, Briefcase, User, Clock, Link2, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
@@ -28,6 +29,8 @@ import { EditContactDialog } from "@/components/contacts/EditContactDialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
+type SortField = keyof Pick<Contact, 'first_name' | 'company' | 'position' | 'location' | 'email' | 'created_at' | 'updated_at'>;
+type SortDirection = 'asc' | 'desc';
 
 export default function Contacts() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,6 +38,8 @@ export default function Contacts() {
   const [isLoading, setIsLoading] = useState(true);
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   const [contactToEdit, setContactToEdit] = useState<Contact | null>(null);
+  const [sortField, setSortField] = useState<SortField>('first_name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { toast } = useToast();
   
   // Fetch contacts on component mount
@@ -67,6 +72,23 @@ export default function Contacts() {
     }
   };
 
+  // Handle sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if already sorting by this field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field and default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
   // Filter contacts based on search query
   const filteredContacts = contacts.filter(contact => {
     const fullName = `${contact.first_name} ${contact.last_name}`.toLowerCase();
@@ -78,6 +100,29 @@ export default function Contacts() {
       (contact.position && contact.position.toLowerCase().includes(query)) ||
       (contact.location && contact.location.toLowerCase().includes(query))
     );
+  });
+
+  // Sort contacts based on sort field and direction
+  const sortedContacts = [...filteredContacts].sort((a, b) => {
+    let valueA, valueB;
+
+    if (sortField === 'first_name') {
+      valueA = `${a.first_name} ${a.last_name}`.toLowerCase();
+      valueB = `${b.first_name} ${b.last_name}`.toLowerCase();
+    } else if (sortField === 'email') {
+      valueA = (a.email || '').toLowerCase();
+      valueB = (b.email || '').toLowerCase();
+    } else if (sortField === 'created_at' || sortField === 'updated_at') {
+      valueA = new Date(a[sortField]).getTime();
+      valueB = new Date(b[sortField]).getTime();
+    } else {
+      valueA = (a[sortField] || '').toString().toLowerCase();
+      valueB = (b[sortField] || '').toString().toLowerCase();
+    }
+
+    if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+    if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
   });
 
   // Delete contact function
@@ -168,20 +213,62 @@ export default function Contacts() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>Location</TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50" 
+                  onClick={() => handleSort('first_name')}
+                >
+                  <div className="flex items-center">
+                    Name {getSortIcon('first_name')}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50" 
+                  onClick={() => handleSort('company')}
+                >
+                  <div className="flex items-center">
+                    Company {getSortIcon('company')}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50" 
+                  onClick={() => handleSort('position')}
+                >
+                  <div className="flex items-center">
+                    Position {getSortIcon('position')}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50" 
+                  onClick={() => handleSort('location')}
+                >
+                  <div className="flex items-center">
+                    Location {getSortIcon('location')}
+                  </div>
+                </TableHead>
                 <TableHead>Contact Info</TableHead>
                 <TableHead>URL</TableHead>
-                <TableHead>Added</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50" 
+                  onClick={() => handleSort('created_at')}
+                >
+                  <div className="flex items-center">
+                    Added {getSortIcon('created_at')}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50" 
+                  onClick={() => handleSort('updated_at')}
+                >
+                  <div className="flex items-center">
+                    Updated {getSortIcon('updated_at')}
+                  </div>
+                </TableHead>
                 <TableHead>Notes</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredContacts.map((contact) => (
+              {sortedContacts.map((contact) => (
                 <TableRow 
                   key={contact.id}
                   onClick={() => handleRowClick(contact)}

@@ -3,11 +3,13 @@ import { useState } from "react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Mail, Phone, MessageSquare, User, Briefcase, MapPin, Link2, Clock, FileText } from "lucide-react";
+import { Calendar, Mail, Phone, MessageSquare, User, Briefcase, MapPin, Link2, Clock, FileText, ArrowUp, ArrowDown } from "lucide-react";
 import { AddInteractionDialog } from "@/components/crm/AddInteractionDialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
+type SortField = keyof Pick<Contact, 'first_name' | 'company' | 'position' | 'location' | 'email' | 'created_at'>;
+type SortDirection = 'asc' | 'desc';
 
 interface ContactsListProps {
   contacts: Contact[];
@@ -18,7 +20,9 @@ interface ContactsListProps {
 export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsListProps) {
   const [contactForInteraction, setContactForInteraction] = useState<Contact | null>(null);
   const [showAddInteractionDialog, setShowAddInteractionDialog] = useState(false);
-
+  const [sortField, setSortField] = useState<SortField>('first_name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  
   const handleAddInteraction = (e: React.MouseEvent, contact: Contact) => {
     e.stopPropagation();
     setContactForInteraction(contact);
@@ -30,6 +34,44 @@ export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsL
     setContactForInteraction(null);
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if already sorting by this field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field and default to ascending
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedContacts = [...contacts].sort((a, b) => {
+    let valueA, valueB;
+
+    if (sortField === 'first_name') {
+      valueA = `${a.first_name} ${a.last_name}`.toLowerCase();
+      valueB = `${b.first_name} ${b.last_name}`.toLowerCase();
+    } else if (sortField === 'email') {
+      valueA = (a.email || '').toLowerCase();
+      valueB = (b.email || '').toLowerCase();
+    } else if (sortField === 'created_at') {
+      valueA = new Date(a.created_at).getTime();
+      valueB = new Date(b.created_at).getTime();
+    } else {
+      valueA = (a[sortField] || '').toString().toLowerCase();
+      valueB = (b[sortField] || '').toString().toLowerCase();
+    }
+
+    if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+    if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return null;
+    return sortDirection === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-10">
@@ -56,19 +98,54 @@ export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsL
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Company</TableHead>
-            <TableHead>Position</TableHead>
-            <TableHead>Location</TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50" 
+              onClick={() => handleSort('first_name')}
+            >
+              <div className="flex items-center">
+                Name {getSortIcon('first_name')}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50" 
+              onClick={() => handleSort('company')}
+            >
+              <div className="flex items-center">
+                Company {getSortIcon('company')}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50" 
+              onClick={() => handleSort('position')}
+            >
+              <div className="flex items-center">
+                Position {getSortIcon('position')}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50" 
+              onClick={() => handleSort('location')}
+            >
+              <div className="flex items-center">
+                Location {getSortIcon('location')}
+              </div>
+            </TableHead>
             <TableHead>Contact Info</TableHead>
             <TableHead>URL</TableHead>
-            <TableHead>Added</TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50" 
+              onClick={() => handleSort('created_at')}
+            >
+              <div className="flex items-center">
+                Added {getSortIcon('created_at')}
+              </div>
+            </TableHead>
             <TableHead>Notes</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {contacts.map((contact) => (
+          {sortedContacts.map((contact) => (
             <TableRow 
               key={contact.id}
               onClick={() => onSelectContact(contact)}
