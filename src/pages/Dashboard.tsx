@@ -5,6 +5,7 @@ import { MainLayout } from "@/components/layouts/MainLayout";
 import { Users, Calendar, CheckSquare } from "lucide-react";
 import { AddContactDialog } from "@/components/contacts/AddContactDialog";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 export default function Dashboard() {
   const [contactCount, setContactCount] = useState(0);
@@ -14,7 +15,7 @@ export default function Dashboard() {
     async function fetchContactCount() {
       try {
         const { count, error } = await supabase
-          .from("contacts")
+          .from('contacts')
           .select("*", { count: "exact", head: true });
         
         if (error) {

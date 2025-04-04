@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 type AddContactDialogProps = {
   trigger?: React.ReactNode;
@@ -80,7 +80,7 @@ export function AddContactDialog({ trigger }: AddContactDialogProps) {
       
       // Save contact to Supabase
       const { data, error } = await supabase
-        .from("contacts")
+        .from('contacts')
         .insert({
           user_id: user.id,
           first_name: firstName,
