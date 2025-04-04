@@ -1,7 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Bell, LayoutList, LayoutCards } from "lucide-react";
+import { PlusCircle, Bell, List, Grid } from "lucide-react";
 import { InteractionsList } from "@/components/crm/InteractionsList";
 import { RemindersSection } from "@/components/crm/RemindersSection";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +50,7 @@ export function ContactDetail({
                 onClick={() => setReminderView('cards')}
                 className="h-8 w-8"
               >
-                <LayoutCards className="h-4 w-4" />
+                <Grid className="h-4 w-4" />
               </Button>
               <Button 
                 variant={reminderView === 'table' ? 'secondary' : 'ghost'} 
@@ -58,7 +58,7 @@ export function ContactDetail({
                 onClick={() => setReminderView('table')}
                 className="h-8 w-8"
               >
-                <LayoutList className="h-4 w-4" />
+                <List className="h-4 w-4" />
               </Button>
             </div>
           )}
