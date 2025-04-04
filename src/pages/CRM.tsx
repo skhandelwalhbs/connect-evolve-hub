@@ -1,16 +1,15 @@
 
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ContactsList } from "@/components/crm/ContactsList";
-import { InteractionsList } from "@/components/crm/InteractionsList";
+import { SearchBar } from "@/components/crm/SearchBar";
+import { ContactDetail } from "@/components/crm/ContactDetail";
 import { AddInteractionDialog } from "@/components/crm/AddInteractionDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Calendar, Clock, PlusCircle } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
@@ -99,17 +98,8 @@ export default function CRM() {
         </Button>
       </div>
 
-      <div className="mb-6 flex items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search contacts..."
-            className="w-full pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+      <div className="mb-6">
+        <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -127,31 +117,10 @@ export default function CRM() {
         </TabsContent>
         
         <TabsContent value="interactions" className="space-y-4">
-          {selectedContact ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">
-                  {selectedContact.first_name} {selectedContact.last_name}
-                </CardTitle>
-                <CardDescription>
-                  {selectedContact.company} - {selectedContact.position}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <InteractionsList contactId={selectedContact.id} />
-                <div className="mt-4">
-                  <Button onClick={handleOpenAddInteraction}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Interaction
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="text-center py-10 text-muted-foreground">
-              Select a contact to view their interactions
-            </div>
-          )}
+          <ContactDetail 
+            contact={selectedContact}
+            onOpenAddInteraction={handleOpenAddInteraction}
+          />
         </TabsContent>
       </Tabs>
       

@@ -1,7 +1,8 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Mail, Phone } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Mail, Phone, Star } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
@@ -39,9 +40,14 @@ export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsL
       {contacts.map((contact) => (
         <Card key={contact.id} className="overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle>{contact.first_name} {contact.last_name}</CardTitle>
-            <CardDescription className="flex items-center">
-              {contact.company} - {contact.position}
+            <div className="flex items-center justify-between">
+              <CardTitle>{contact.first_name} {contact.last_name}</CardTitle>
+              <Badge variant="outline" className="ml-2">
+                {contact.position}
+              </Badge>
+            </div>
+            <CardDescription>
+              {contact.company}
             </CardDescription>
           </CardHeader>
           <CardContent>
