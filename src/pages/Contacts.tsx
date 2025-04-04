@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import {
 import { EditContactDialog } from "@/components/contacts/EditContactDialog";
 import { Tag } from "@/components/tags/Tag";
 import { Tag as TagType } from "@/types/database-extensions";
+import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
 

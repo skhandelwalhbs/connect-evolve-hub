@@ -2,7 +2,7 @@
 import type { Database as OriginalDatabase } from "@/integrations/supabase/types";
 
 // Extend the original Database type with our new tables
-export interface ExtendedDatabase extends OriginalDatabase {
+export interface ExtendedDatabase {
   public: {
     Tables: {
       // Include all existing tables from the original Database type
@@ -92,7 +92,5 @@ export type Tag = ExtendedDatabase['public']['Tables']['tags']['Row'];
 export type ContactTag = ExtendedDatabase['public']['Tables']['contact_tags']['Row'];
 
 // Define a custom client type for strongly typed queries
-export type ExtendedClient = ReturnType<typeof createClient<ExtendedDatabase>>;
-
-// Helper to create a string literal
 import { createClient } from "@supabase/supabase-js";
+export type ExtendedClient = ReturnType<typeof createClient<ExtendedDatabase>>;
