@@ -1,8 +1,11 @@
+
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu, User, UserPlus, Users, CalendarClock } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/auth/UserMenu";
+import { useAuth } from "@/contexts/AuthContext";
 
 type MainLayoutProps = {
   children: React.ReactNode;
@@ -10,6 +13,7 @@ type MainLayoutProps = {
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { user } = useAuth();
   
   return (
     <SidebarProvider defaultOpen={true} onOpenChange={setIsSidebarOpen}>
@@ -26,13 +30,13 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
               </SidebarTrigger>
               <h1 className="text-xl font-semibold ml-2">Connect Hub</h1>
             </div>
-            <div>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/account">
-                  <User className="h-4 w-4 mr-2" />
-                  Account
-                </Link>
-              </Button>
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-sm font-medium hidden sm:block">
+                  Hello, {user.email?.split('@')[0] || 'User'}
+                </span>
+              )}
+              <UserMenu />
             </div>
           </header>
           <main className="flex-1 p-6">
