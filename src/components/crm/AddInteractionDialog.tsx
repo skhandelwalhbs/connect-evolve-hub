@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -48,6 +48,16 @@ export function AddInteractionDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  // Reset form state when dialog opens with new defaultValues
+  useEffect(() => {
+    if (open) {
+      setType(defaultValues?.type || "Call");
+      setNotes(defaultValues?.notes || "");
+      setDate(defaultValues?.date || new Date().toISOString().split('T')[0]);
+      console.log("AddInteractionDialog opened with defaultValues:", defaultValues);
+    }
+  }, [open, defaultValues]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,9 +103,6 @@ export function AddInteractionDialog({
       } else {
         onSuccess();
         onOpenChange(false);
-        setType(defaultValues?.type || "Call");
-        setNotes(defaultValues?.notes || "");
-        setDate(defaultValues?.date || new Date().toISOString().split('T')[0]);
       }
     } catch (err) {
       console.error("Unexpected error:", err);

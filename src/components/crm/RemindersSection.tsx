@@ -60,7 +60,7 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
         });
       } else {
         // First cast to unknown, then to Reminder[] to safely handle the type conversion
-        const typedData = (data || []) as unknown as Reminder[];
+        const typedData = data ? (data as unknown as Reminder[]) : [];
         setReminders(typedData);
         
         // Split reminders into active and completed
@@ -139,21 +139,26 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
           description: "Failed to complete the reminder. Please try again.",
           variant: "destructive",
         });
-      } else {
-        toast({
-          title: "Success",
-          description: "Reminder marked as completed",
-        });
-        
-        if (logInteraction) {
-          setShowAddInteractionDialog(true);
-        }
-        
-        fetchReminders();
+        setReminderToComplete(null);
+        return;
+      } 
+      
+      toast({
+        title: "Success",
+        description: "Reminder marked as completed",
+      });
+      
+      // Fetch updated reminders first
+      await fetchReminders();
+      
+      // Only after the reminder is marked as complete AND fetching is done, 
+      // show the interaction dialog if needed
+      if (logInteraction) {
+        console.log("Should open interaction dialog for reminder:", reminderToComplete);
+        setShowAddInteractionDialog(true);
       }
     } catch (err) {
       console.error("Unexpected error:", err);
-    } finally {
       setReminderToComplete(null);
     }
   };
@@ -177,7 +182,9 @@ export function RemindersSection({ contactId }: RemindersSectionProps) {
   };
 
   const handleInteractionAdded = () => {
+    console.log("Interaction added successfully");
     setShowAddInteractionDialog(false);
+    setReminderToComplete(null);
     toast({
       title: "Success",
       description: "Interaction logged successfully",
