@@ -27,10 +27,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EditContactDialog } from "@/components/contacts/EditContactDialog";
 import { Tag } from "@/components/tags/Tag";
-import { Tag as TagType } from "@/types/database-extensions";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
+type TagType = Database['public']['Tables']['tags']['Row'];
 
 export default function Contacts() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -182,7 +182,6 @@ export default function Contacts() {
     setContactToEdit(contact);
   };
 
-  // JSX
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">

@@ -18,13 +18,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { TagSelector } from "@/components/tags/TagSelector";
 import type { Database } from "@/integrations/supabase/types";
-import { Tag as TagType } from "@/types/database-extensions";
+
+type Tag = Database['public']['Tables']['tags']['Row'];
 
 export function ManualContactForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<TagType[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -129,7 +130,7 @@ export function ManualContactForm() {
   };
 
   // Handle tag changes
-  const handleTagsChange = (tags: TagType[]) => {
+  const handleTagsChange = (tags: Tag[]) => {
     setSelectedTags(tags);
   };
 
@@ -247,6 +248,14 @@ export function ManualContactForm() {
         </div>
         
         <div className="grid gap-2">
+          <Label htmlFor="tags">Tags</Label>
+          <TagSelector
+            selectedTags={selectedTags}
+            onTagsChange={handleTagsChange}
+          />
+        </div>
+        
+        <div className="grid gap-2">
           <Label htmlFor="notes">Notes</Label>
           <Textarea
             id="notes"
@@ -254,15 +263,6 @@ export function ManualContactForm() {
             value={formData.notes}
             onChange={(e) => handleChange("notes", e.target.value)}
             rows={3}
-          />
-        </div>
-        
-        {/* Tags moved to the bottom of the form */}
-        <div className="grid gap-2">
-          <Label htmlFor="tags">Tags</Label>
-          <TagSelector
-            selectedTags={selectedTags}
-            onTagsChange={handleTagsChange}
           />
         </div>
         

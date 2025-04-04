@@ -19,9 +19,9 @@ import { Loader2, Clock } from "lucide-react";
 import { AddReminderDialog } from "@/components/crm/AddReminderDialog";
 import { TagSelector } from "@/components/tags/TagSelector";
 import type { Database } from "@/integrations/supabase/types";
-import { Tag as TagType } from "@/types/database-extensions";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
+type Tag = Database['public']['Tables']['tags']['Row'];
 
 interface EditContactDialogProps {
   contact: Contact | null;
@@ -34,7 +34,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
   const [formData, setFormData] = useState<Partial<Contact>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<TagType[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [isLoadingTags, setIsLoadingTags] = useState(false);
   const { toast } = useToast();
 
@@ -111,7 +111,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
   };
 
   // Handle tags change
-  const handleTagsChange = (tags: TagType[]) => {
+  const handleTagsChange = (tags: Tag[]) => {
     setSelectedTags(tags);
   };
 
@@ -303,6 +303,15 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
               </div>
               
               <div className="space-y-2">
+                <Label>Tags</Label>
+                <TagSelector
+                  contactId={contact.id}
+                  selectedTags={selectedTags}
+                  onTagsChange={handleTagsChange}
+                />
+              </div>
+              
+              <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
@@ -310,16 +319,6 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
                   value={formData.notes || ""}
                   onChange={handleChange}
                   rows={3}
-                />
-              </div>
-              
-              {/* Tags moved to the bottom of the form */}
-              <div className="space-y-2">
-                <Label>Tags</Label>
-                <TagSelector
-                  contactId={contact.id}
-                  selectedTags={selectedTags}
-                  onTagsChange={handleTagsChange}
                 />
               </div>
             </form>

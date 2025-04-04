@@ -7,10 +7,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tag } from "@/components/tags/Tag";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tag as TagType } from "@/types/database-extensions";
+import type { Database } from "@/integrations/supabase/types";
+
+type Tag = Database['public']['Tables']['tags']['Row'];
 
 export function TagsManager() {
-  const [tags, setTags] = useState<TagType[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [selectedColor, setSelectedColor] = useState("#9b87f5"); // Default purple
@@ -57,26 +59,12 @@ export function TagsManager() {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Authentication Error",
-          description: "You must be logged in to add tags.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const newTag = {
-        name: newTagName.trim(),
-        color: selectedColor,
-        user_id: user.id
-      };
-
       const { data, error } = await supabase
         .from('tags')
-        .insert(newTag)
+        .insert({
+          name: newTagName.trim(),
+          color: selectedColor,
+        })
         .select();
       
       if (error) {

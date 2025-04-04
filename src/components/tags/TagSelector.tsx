@@ -20,17 +20,19 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Tag } from "@/components/tags/Tag";
-import { Tag as TagType } from "@/types/database-extensions";
+import type { Database } from "@/integrations/supabase/types";
+
+type Tag = Database['public']['Tables']['tags']['Row'];
 
 interface TagSelectorProps {
   contactId?: string;
-  selectedTags: TagType[];
-  onTagsChange: (tags: TagType[]) => void;
+  selectedTags: Tag[];
+  onTagsChange: (tags: Tag[]) => void;
 }
 
 export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [tags, setTags] = useState<TagType[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -51,7 +53,6 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
         throw error;
       }
       
-      console.log("Fetched tags:", data);
       setTags(data || []);
     } catch (error) {
       console.error("Error fetching tags:", error);
@@ -65,42 +66,25 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
     }
   };
 
-  const handleSelectTag = (selectedTag: TagType, e?: React.MouseEvent) => {
-    // Stop propagation to prevent the click from reaching underlying elements
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    console.log("Tag selected:", selectedTag);
-    
+  const handleSelectTag = (selectedTag: Tag) => {
     // Check if tag is already selected
     const isSelected = selectedTags.some(tag => tag.id === selectedTag.id);
-    console.log("Is already selected:", isSelected);
     
     if (isSelected) {
       // Remove tag
-      const newTags = selectedTags.filter(tag => tag.id !== selectedTag.id);
-      console.log("Removing tag, new tags:", newTags);
-      onTagsChange(newTags);
+      onTagsChange(selectedTags.filter(tag => tag.id !== selectedTag.id));
     } else {
       // Add tag
-      const newTags = [...selectedTags, selectedTag];
-      console.log("Adding tag, new tags:", newTags);
-      onTagsChange(newTags);
+      onTagsChange([...selectedTags, selectedTag]);
     }
-    
-    // Don't close the popover when selecting tags
-    // This allows users to select multiple tags without reopening the popover
   };
 
   const handleRemoveTag = (tagId: string) => {
-    console.log("Removing tag with ID:", tagId);
     onTagsChange(selectedTags.filter(tag => tag.id !== tagId));
   };
 
   return (
-    <div className="space-y-2 relative">
+    <div className="space-y-2">
       <div className="flex flex-wrap gap-1">
         {selectedTags.map(tag => (
           <Tag 
@@ -124,82 +108,37 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-full p-0" 
-          align="start"
-          style={{ zIndex: 9999 }} // Highest possible z-index to ensure it's always on top
-        >
-          <div 
-            className="w-full"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          >
-            <Command>
-              <CommandInput 
-                placeholder="Search tags..." 
-                onClick={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-              />
-              <CommandList>
-                <CommandEmpty>
-                  {isLoading ? "Loading..." : "No tags found."}
-                </CommandEmpty>
-                <CommandGroup>
-                  {tags.map((tag) => {
-                    const isSelected = selectedTags.some(t => t.id === tag.id);
-                    return (
-                      <CommandItem
-                        key={tag.id}
-                        value={tag.id}
-                        onSelect={(currentValue) => {
-                          console.log(`CommandItem onSelect fired for tag: ${tag.name}`);
-                          // We'll handle selection in the div onClick handler instead
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <div 
-                          className="flex items-center w-full mr-2 cursor-pointer select-none"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleSelectTag(tag, e);
-                          }}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              handleSelectTag(tag);
-                            }
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              isSelected ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          <div className="flex-1">
-                            <Tag tag={tag} />
-                          </div>
-                        </div>
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </div>
+        <PopoverContent className="w-full p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Search tags..." />
+            <CommandList>
+              <CommandEmpty>
+                {isLoading ? "Loading..." : "No tags found."}
+              </CommandEmpty>
+              <CommandGroup>
+                {tags.map((tag) => {
+                  const isSelected = selectedTags.some(t => t.id === tag.id);
+                  return (
+                    <CommandItem
+                      key={tag.id}
+                      onSelect={() => handleSelectTag(tag)}
+                      className="flex items-center"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          isSelected ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex-1">
+                        <Tag tag={tag} />
+                      </div>
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            </CommandList>
+          </Command>
         </PopoverContent>
       </Popover>
     </div>
