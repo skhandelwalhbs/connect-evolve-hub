@@ -47,6 +47,53 @@ export type Database = {
           },
         ]
       }
+      contact_reminders: {
+        Row: {
+          channel: string
+          contact_id: string
+          created_at: string
+          date: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          contact_id: string
+          created_at?: string
+          date: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          contact_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_reminders_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           company: string
