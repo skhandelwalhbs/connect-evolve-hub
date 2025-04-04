@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Users, Calendar, Mail, Phone, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const [isLoadingRecent, setIsLoadingRecent] = useState(true);
   const [isLoadingReminders, setIsLoadingReminders] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchContactData() {
@@ -84,6 +86,10 @@ export default function Dashboard() {
     fetchReminderData();
   }, [toast]);
 
+  const handleContactCardClick = () => {
+    navigate("/contacts");
+  };
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -97,7 +103,10 @@ export default function Dashboard() {
       </div>
       
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card>
+        <Card 
+          onClick={handleContactCardClick} 
+          className="hover:bg-accent/50 transition-colors cursor-pointer"
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
