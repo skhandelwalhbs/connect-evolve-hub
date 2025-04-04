@@ -112,6 +112,11 @@ export default function Contacts() {
     }
   };
 
+  // Handle row click to open edit dialog
+  const handleRowClick = (contact: Contact) => {
+    setContactToEdit(contact);
+  };
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -177,7 +182,11 @@ export default function Contacts() {
             </TableHeader>
             <TableBody>
               {filteredContacts.map((contact) => (
-                <TableRow key={contact.id}>
+                <TableRow 
+                  key={contact.id}
+                  onClick={() => handleRowClick(contact)}
+                  className="cursor-pointer hover:bg-muted"
+                >
                   <TableCell className="font-medium">
                     <div className="flex items-center">
                       <User className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
@@ -217,7 +226,13 @@ export default function Contacts() {
                     {contact.url ? (
                       <div className="flex items-center text-sm">
                         <Link2 className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                        <a href={contact.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        <a 
+                          href={contact.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-primary hover:underline"
+                          onClick={(e) => e.stopPropagation()} // Prevent row click when clicking the link
+                        >
                           Profile Link
                         </a>
                       </div>
@@ -239,12 +254,15 @@ export default function Contacts() {
                       </span>
                     ) : "-"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}> {/* Prevent row click when clicking action buttons */}
                     <div className="flex space-x-2">
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => setContactToEdit(contact)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setContactToEdit(contact);
+                        }}
                       >
                         <Pencil className="h-4 w-4 text-muted-foreground" />
                         <span className="sr-only">Edit</span>
@@ -252,7 +270,10 @@ export default function Contacts() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => setContactToDelete(contact)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setContactToDelete(contact);
+                        }}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                         <span className="sr-only">Delete</span>
