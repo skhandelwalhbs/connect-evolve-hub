@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { Search, Mail, Phone, UserPlus, Pencil, Trash2 } from "lucide-react";
+import { Search, Mail, Phone, UserPlus, Pencil, Trash2, MapPin, Briefcase, User, Clock, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
@@ -75,7 +74,9 @@ export default function Contacts() {
     return (
       fullName.includes(query) ||
       (contact.email && contact.email.toLowerCase().includes(query)) ||
-      (contact.company && contact.company.toLowerCase().includes(query))
+      (contact.company && contact.company.toLowerCase().includes(query)) ||
+      (contact.position && contact.position.toLowerCase().includes(query)) ||
+      (contact.location && contact.location.toLowerCase().includes(query))
     );
   });
 
@@ -158,14 +159,19 @@ export default function Contacts() {
           </div>
         </div>
       ) : (
-        <div className="rounded-md border">
+        <div className="rounded-md border overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Company</TableHead>
+                <TableHead>Position</TableHead>
+                <TableHead>Location</TableHead>
                 <TableHead>Contact Info</TableHead>
+                <TableHead>URL</TableHead>
                 <TableHead>Added</TableHead>
+                <TableHead>Updated</TableHead>
+                <TableHead>Notes</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -173,11 +179,26 @@ export default function Contacts() {
               {filteredContacts.map((contact) => (
                 <TableRow key={contact.id}>
                   <TableCell className="font-medium">
-                    {contact.first_name} {contact.last_name}
+                    <div className="flex items-center">
+                      <User className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                      {contact.first_name} {contact.last_name}
+                    </div>
                   </TableCell>
-                  <TableCell>{contact.company || "-"}</TableCell>
                   <TableCell>
-                    <div className="flex flex-col space-y-1">
+                    <div className="flex items-center">
+                      <Briefcase className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                      {contact.company || "-"}
+                    </div>
+                  </TableCell>
+                  <TableCell>{contact.position || "-"}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <MapPin className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                      {contact.location || "-"}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col space-y-1 min-w-[180px]">
                       {contact.email && (
                         <div className="flex items-center text-sm">
                           <Mail className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
@@ -192,8 +213,31 @@ export default function Contacts() {
                       )}
                     </div>
                   </TableCell>
+                  <TableCell>
+                    {contact.url ? (
+                      <div className="flex items-center text-sm">
+                        <Link2 className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                        <a href={contact.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          Profile Link
+                        </a>
+                      </div>
+                    ) : "-"}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    <div className="flex items-center">
+                      <Clock className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                      {new Date(contact.created_at).toLocaleDateString()}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(contact.created_at).toLocaleDateString()}
+                    {new Date(contact.updated_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    {contact.notes ? (
+                      <span className="max-w-xs truncate block" title={contact.notes}>
+                        {contact.notes.length > 30 ? `${contact.notes.substring(0, 30)}...` : contact.notes}
+                      </span>
+                    ) : "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
