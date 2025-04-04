@@ -29,13 +29,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type AddContactDialogProps = {
   trigger?: React.ReactNode;
 };
 
 export function AddContactDialog({ trigger }: AddContactDialogProps) {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -51,11 +55,83 @@ export function AddContactDialog({ trigger }: AddContactDialogProps) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    // Here we would save the contact to the database
-    setOpen(false);
+    
+    try {
+      setIsLoading(true);
+      
+      // Split name into first and last name
+      const nameParts = formData.name.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || ""; // Join the rest as last name
+      
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to add contacts.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Save contact to Supabase
+      const { data, error } = await supabase
+        .from("contacts")
+        .insert({
+          user_id: user.id,
+          first_name: firstName,
+          last_name: lastName,
+          email: formData.email,
+          phone: formData.phone,
+          company: formData.meetingPlace,
+          job_title: formData.meetingContext,
+          notes: formData.notes
+        })
+        .select();
+      
+      if (error) {
+        console.error("Error adding contact:", error);
+        toast({
+          title: "Error",
+          description: "Failed to add contact. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Success
+      toast({
+        title: "Contact Added",
+        description: `${formData.name} has been added to your contacts.`,
+      });
+      
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        meetingPlace: "",
+        meetingContext: "",
+        date: new Date(),
+        notes: "",
+        connectionStrength: "medium",
+      });
+      
+      setOpen(false);
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -188,7 +264,9 @@ export function AddContactDialog({ trigger }: AddContactDialogProps) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit">Save Contact</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Contact"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

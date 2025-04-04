@@ -1,10 +1,37 @@
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Users, Calendar, CheckSquare } from "lucide-react";
 import { AddContactDialog } from "@/components/contacts/AddContactDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Dashboard() {
+  const [contactCount, setContactCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchContactCount() {
+      try {
+        const { count, error } = await supabase
+          .from("contacts")
+          .select("*", { count: "exact", head: true });
+        
+        if (error) {
+          console.error("Error fetching contacts:", error);
+        } else {
+          setContactCount(count || 0);
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchContactCount();
+  }, []);
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -19,8 +46,12 @@ export default function Dashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Start adding your network</p>
+            <div className="text-2xl font-bold">
+              {isLoading ? "..." : contactCount}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {contactCount === 0 && !isLoading ? "Start adding your network" : "Contacts in your network"}
+            </p>
           </CardContent>
         </Card>
         
@@ -55,7 +86,11 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-center py-8 text-muted-foreground">
-              No contacts added yet
+              {isLoading 
+                ? "Loading contacts..." 
+                : contactCount === 0 
+                  ? "No contacts added yet" 
+                  : "Loading recent contacts..."}
             </div>
           </CardContent>
         </Card>
