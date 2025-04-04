@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu, User, UserPlus, Users } from "lucide-react";
+import { Menu, User, UserPlus, Users, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type MainLayoutProps = {
@@ -77,6 +77,15 @@ const AppSidebar = () => {
               }`}
             >
               <span>CRM</span>
+            </Link>
+            <Link 
+              to="/reminders" 
+              className={`flex items-center px-3 py-2 text-sm rounded-md ${
+                location.pathname === "/reminders" ? "bg-secondary" : "hover:bg-secondary"
+              }`}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              <span>Reminders</span>
             </Link>
             <div className="pt-4 pb-2">
               <Button className="w-full" asChild>

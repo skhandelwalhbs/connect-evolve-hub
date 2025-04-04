@@ -14,6 +14,7 @@ import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import AddContact from "./pages/AddContact";
+import Reminders from "./pages/Reminders";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/contacts" element={<Contacts />} />
               <Route path="/contacts/add" element={<AddContact />} />
               <Route path="/crm" element={<CRM />} />
+              <Route path="/reminders" element={<Reminders />} />
               <Route path="/account" element={<Account />} />
             </Route>
             

@@ -14,8 +14,10 @@ type Contact = Database['public']['Tables']['contacts']['Row'];
 export default function Dashboard() {
   const [contactCount, setContactCount] = useState(0);
   const [recentContacts, setRecentContacts] = useState<Contact[]>([]);
+  const [activeReminderCount, setActiveReminderCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingRecent, setIsLoadingRecent] = useState(true);
+  const [isLoadingReminders, setIsLoadingReminders] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -59,7 +61,28 @@ export default function Dashboard() {
       }
     }
 
+    async function fetchReminderData() {
+      try {
+        // Fetch active reminder count
+        const { count, error: reminderError } = await supabase
+          .from('contact_reminders')
+          .select("*", { count: "exact", head: true })
+          .eq('is_active', true);
+        
+        if (reminderError) {
+          console.error("Error fetching reminder count:", reminderError);
+        } else {
+          setActiveReminderCount(count || 0);
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+      } finally {
+        setIsLoadingReminders(false);
+      }
+    }
+
     fetchContactData();
+    fetchReminderData();
   }, [toast]);
 
   return (
@@ -90,15 +113,23 @@ export default function Dashboard() {
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Follow-ups</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">No pending follow-ups</p>
-          </CardContent>
+        <Card className="hover:bg-accent/50 transition-colors">
+          <Link to="/reminders" className="block">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Active Reminders</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {isLoadingReminders ? "..." : activeReminderCount}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {activeReminderCount === 0 && !isLoadingReminders 
+                  ? "No pending reminders" 
+                  : `${activeReminderCount} reminder${activeReminderCount !== 1 ? 's' : ''} requiring attention`}
+              </p>
+            </CardContent>
+          </Link>
         </Card>
         
         <Card>
