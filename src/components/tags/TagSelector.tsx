@@ -42,11 +42,10 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
   const fetchTags = async () => {
     setIsLoading(true);
     try {
-      // Cast supabase to use our extended client type for this specific query
       const { data, error } = await supabase
         .from('tags')
         .select('*')
-        .order('name', { ascending: true }) as unknown as { data: TagType[] | null; error: any };
+        .order('name', { ascending: true });
       
       if (error) {
         throw error;

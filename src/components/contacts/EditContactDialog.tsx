@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   Dialog,
@@ -68,7 +69,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
       const { data: contactTagsData, error: contactTagsError } = await supabase
         .from('contact_tags')
         .select('tag_id')
-        .eq('contact_id', contactId) as unknown as { data: { tag_id: string }[] | null; error: any };
+        .eq('contact_id', contactId);
       
       if (contactTagsError) {
         throw contactTagsError;
@@ -81,7 +82,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
         const { data: tagsData, error: tagsError } = await supabase
           .from('tags')
           .select('*')
-          .in('id', tagIds) as unknown as { data: TagType[] | null; error: any };
+          .in('id', tagIds);
         
         if (tagsError) {
           throw tagsError;
@@ -148,7 +149,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
 
       // Update contact tags
       // First delete all existing tags for this contact
-      await supabase.from('contact_tags').delete().eq('contact_id', contact.id) as unknown as any;
+      await supabase.from('contact_tags').delete().eq('contact_id', contact.id);
       
       // Then add the newly selected tags
       if (selectedTags.length > 0) {
@@ -157,10 +158,9 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
           tag_id: tag.id,
         }));
         
-        // Cast to any to avoid TypeScript errors
         const { error: tagError } = await supabase
           .from('contact_tags')
-          .insert(tagAssignments as any);
+          .insert(tagAssignments);
         
         if (tagError) {
           throw tagError;

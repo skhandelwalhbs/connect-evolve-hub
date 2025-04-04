@@ -81,7 +81,7 @@ export default function Contacts() {
       const { data: relationships, error: relError } = await supabase
         .from('contact_tags')
         .select('contact_id, tag_id')
-        .in('contact_id', contactIds) as unknown as { data: { contact_id: string, tag_id: string }[] | null; error: any };
+        .in('contact_id', contactIds);
       
       if (relError) {
         console.error("Error fetching tag relationships:", relError);
@@ -99,7 +99,7 @@ export default function Contacts() {
       const { data: tags, error: tagError } = await supabase
         .from('tags')
         .select('*')
-        .in('id', tagIds) as unknown as { data: TagType[] | null; error: any };
+        .in('id', tagIds);
         
       if (tagError) {
         console.error("Error fetching tags:", tagError);

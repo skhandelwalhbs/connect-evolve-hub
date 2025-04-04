@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -96,10 +97,9 @@ export function ManualContactForm() {
           tag_id: tag.id,
         }));
         
-        // Cast to any to avoid TypeScript errors since we're using custom extended types
         const { error: tagError } = await supabase
           .from('contact_tags')
-          .insert(tagAssignments as any);
+          .insert(tagAssignments);
         
         if (tagError) {
           console.error("Error adding tags to contact:", tagError);

@@ -27,7 +27,7 @@ export function TagsManager() {
       const { data, error } = await supabase
         .from('tags')
         .select('*')
-        .order('created_at', { ascending: false }) as unknown as { data: TagType[] | null; error: any };
+        .order('created_at', { ascending: false });
       
       if (error) {
         throw error;
@@ -77,7 +77,7 @@ export function TagsManager() {
       const { data, error } = await supabase
         .from('tags')
         .insert(newTag)
-        .select() as unknown as { data: TagType[] | null; error: any };
+        .select();
       
       if (error) {
         throw error;
