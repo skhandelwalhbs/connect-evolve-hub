@@ -14,7 +14,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
   return (
-    <SidebarProvider defaultIsOpen={true} onOpenChange={setIsSidebarOpen}>
+    <SidebarProvider defaultOpen={true} onOpenChange={setIsSidebarOpen}>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
