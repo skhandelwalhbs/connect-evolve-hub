@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -85,7 +86,8 @@ export function AddReminderDialog({ contactId, open, onOpenChange, onSuccess }: 
       } else {
         // Show the calendar option after successful creation
         setShowCalendarOption(true);
-        if (data && data.length > 0) {
+        // Fix the TypeScript error by using optional chaining and checking if data exists and has elements
+        if (data && Array.isArray(data) && data.length > 0) {
           setNewReminderId(data[0].id);
         }
         toast({
