@@ -3,10 +3,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { Search, Mail, Phone } from "lucide-react";
-import { AddContactDialog } from "@/components/contacts/AddContactDialog";
+import { Search, Mail, Phone, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -69,7 +69,12 @@ export default function Contacts() {
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Contacts</h1>
-        <AddContactDialog />
+        <Button asChild>
+          <Link to="/contacts/add">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Contact
+          </Link>
+        </Button>
       </div>
       
       <div className="flex items-center mb-6">
@@ -99,11 +104,11 @@ export default function Contacts() {
             <p className="text-muted-foreground mt-1">
               Get started by adding your first contact
             </p>
-            <AddContactDialog trigger={
-              <Button className="mt-4">
+            <Button className="mt-4" asChild>
+              <Link to="/contacts/add">
                 Add Your First Contact
-              </Button>
-            } />
+              </Link>
+            </Button>
           </div>
         </div>
       ) : (

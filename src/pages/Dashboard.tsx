@@ -2,11 +2,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MainLayout } from "@/components/layouts/MainLayout";
-import { Users, Calendar, CheckSquare, Mail, Phone } from "lucide-react";
-import { AddContactDialog } from "@/components/contacts/AddContactDialog";
+import { Users, Calendar, CheckSquare, Mail, Phone, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
@@ -66,7 +66,12 @@ export default function Dashboard() {
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <AddContactDialog />
+        <Button asChild>
+          <Link to="/contacts/add">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Contact
+          </Link>
+        </Button>
       </div>
       
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

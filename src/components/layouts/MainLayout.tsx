@@ -1,10 +1,9 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu, User } from "lucide-react";
+import { Menu, User, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AddContactDialog } from "../contacts/AddContactDialog";
 
 type MainLayoutProps = {
   children: React.ReactNode;
@@ -20,7 +19,6 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
         <div className="flex-1 flex flex-col">
           <header className="h-16 border-b flex items-center justify-between px-4">
             <div className="flex items-center">
-              {/* Fix: Remove asChild prop from SidebarTrigger since we're not providing a child component */}
               <SidebarTrigger>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
@@ -48,24 +46,37 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
 };
 
 const AppSidebar = () => {
+  const location = useLocation();
+  
   return (
     <Sidebar>
       <SidebarContent className="py-2">
         <div className="px-3 py-2">
           <h2 className="text-lg font-semibold mb-4">Connect Hub</h2>
           <nav className="space-y-1">
-            <Link to="/" className="flex items-center px-3 py-2 text-sm rounded-md bg-secondary">
+            <Link 
+              to="/dashboard" 
+              className={`flex items-center px-3 py-2 text-sm rounded-md ${
+                location.pathname === "/dashboard" ? "bg-secondary" : "hover:bg-secondary"
+              }`}
+            >
               <span>Dashboard</span>
             </Link>
-            <Link to="/contacts" className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-secondary">
+            <Link 
+              to="/contacts" 
+              className={`flex items-center px-3 py-2 text-sm rounded-md ${
+                location.pathname === "/contacts" ? "bg-secondary" : "hover:bg-secondary"
+              }`}
+            >
               <span>Contacts</span>
             </Link>
             <div className="pt-4 pb-2">
-              <AddContactDialog trigger={
-                <Button className="w-full">
+              <Button className="w-full" asChild>
+                <Link to="/contacts/add">
+                  <UserPlus className="h-4 w-4 mr-2" />
                   Add Contact
-                </Button>
-              } />
+                </Link>
+              </Button>
             </div>
           </nav>
         </div>

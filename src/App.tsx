@@ -12,6 +12,7 @@ import Contacts from "./pages/Contacts";
 import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import AddContact from "./pages/AddContact";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/contacts" element={<Contacts />} />
+              <Route path="/contacts/add" element={<AddContact />} />
               <Route path="/account" element={<Account />} />
             </Route>
             
