@@ -1,12 +1,10 @@
 
 import { Badge } from "@/components/ui/badge";
 import { XIcon } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
-
-type Tag = Database['public']['Tables']['tags']['Row'];
+import { Tag as TagType } from "@/types/database-extensions";
 
 interface TagProps {
-  tag: Tag;
+  tag: TagType;
   onRemove?: () => void;
   removable?: boolean;
   className?: string;

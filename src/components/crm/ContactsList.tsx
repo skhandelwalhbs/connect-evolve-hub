@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,10 +6,10 @@ import { Calendar, Mail, Phone, MessageSquare, User, Briefcase, MapPin, Link2, C
 import { AddInteractionDialog } from "@/components/crm/AddInteractionDialog";
 import { Tag } from "@/components/tags/Tag";
 import { supabase } from "@/integrations/supabase/client";
+import { Tag as TagType } from "@/types/database-extensions";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
-type Tag = Database['public']['Tables']['tags']['Row'];
 
 interface ContactsListProps {
   contacts: Contact[];
@@ -21,7 +20,7 @@ interface ContactsListProps {
 export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsListProps) {
   const [contactForInteraction, setContactForInteraction] = useState<Contact | null>(null);
   const [showAddInteractionDialog, setShowAddInteractionDialog] = useState(false);
-  const [contactTags, setContactTags] = useState<Record<string, Tag[]>>({});
+  const [contactTags, setContactTags] = useState<Record<string, TagType[]>>({});
 
   useEffect(() => {
     if (contacts.length > 0) {
@@ -35,7 +34,7 @@ export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsL
       const { data: relationships, error: relError } = await supabase
         .from('contact_tags')
         .select('contact_id, tag_id')
-        .in('contact_id', contactIds);
+        .in('contact_id', contactIds) as unknown as { data: { contact_id: string, tag_id: string }[] | null; error: any };
       
       if (relError) {
         console.error("Error fetching tag relationships:", relError);
@@ -53,7 +52,7 @@ export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsL
       const { data: tags, error: tagError } = await supabase
         .from('tags')
         .select('*')
-        .in('id', tagIds);
+        .in('id', tagIds) as unknown as { data: TagType[] | null; error: any };
         
       if (tagError) {
         console.error("Error fetching tags:", tagError);
@@ -65,7 +64,7 @@ export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsL
       }
       
       // Create a map of contact IDs to tags
-      const tagsMap: Record<string, Tag[]> = {};
+      const tagsMap: Record<string, TagType[]> = {};
       
       // For each contact, find all their tags
       contactIds.forEach(contactId => {

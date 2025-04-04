@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,14 +17,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { TagSelector } from "@/components/tags/TagSelector";
 import type { Database } from "@/integrations/supabase/types";
-
-type Tag = Database['public']['Tables']['tags']['Row'];
+import { Tag as TagType } from "@/types/database-extensions";
 
 export function ManualContactForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<TagType[]>([]);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -98,9 +96,10 @@ export function ManualContactForm() {
           tag_id: tag.id,
         }));
         
+        // Cast to any to avoid TypeScript errors since we're using custom extended types
         const { error: tagError } = await supabase
           .from('contact_tags')
-          .insert(tagAssignments);
+          .insert(tagAssignments as any);
         
         if (tagError) {
           console.error("Error adding tags to contact:", tagError);
@@ -130,7 +129,7 @@ export function ManualContactForm() {
   };
 
   // Handle tag changes
-  const handleTagsChange = (tags: Tag[]) => {
+  const handleTagsChange = (tags: TagType[]) => {
     setSelectedTags(tags);
   };
 

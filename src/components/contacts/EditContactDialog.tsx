@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Dialog,
@@ -19,9 +18,9 @@ import { Loader2, Clock } from "lucide-react";
 import { AddReminderDialog } from "@/components/crm/AddReminderDialog";
 import { TagSelector } from "@/components/tags/TagSelector";
 import type { Database } from "@/integrations/supabase/types";
+import { Tag as TagType } from "@/types/database-extensions";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
-type Tag = Database['public']['Tables']['tags']['Row'];
 
 interface EditContactDialogProps {
   contact: Contact | null;
@@ -34,7 +33,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
   const [formData, setFormData] = useState<Partial<Contact>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<TagType[]>([]);
   const [isLoadingTags, setIsLoadingTags] = useState(false);
   const { toast } = useToast();
 
@@ -69,7 +68,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
       const { data: contactTagsData, error: contactTagsError } = await supabase
         .from('contact_tags')
         .select('tag_id')
-        .eq('contact_id', contactId);
+        .eq('contact_id', contactId) as unknown as { data: { tag_id: string }[] | null; error: any };
       
       if (contactTagsError) {
         throw contactTagsError;
@@ -82,7 +81,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
         const { data: tagsData, error: tagsError } = await supabase
           .from('tags')
           .select('*')
-          .in('id', tagIds);
+          .in('id', tagIds) as unknown as { data: TagType[] | null; error: any };
         
         if (tagsError) {
           throw tagsError;
@@ -111,7 +110,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
   };
 
   // Handle tags change
-  const handleTagsChange = (tags: Tag[]) => {
+  const handleTagsChange = (tags: TagType[]) => {
     setSelectedTags(tags);
   };
 
@@ -149,7 +148,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
 
       // Update contact tags
       // First delete all existing tags for this contact
-      await supabase.from('contact_tags').delete().eq('contact_id', contact.id);
+      await supabase.from('contact_tags').delete().eq('contact_id', contact.id) as unknown as any;
       
       // Then add the newly selected tags
       if (selectedTags.length > 0) {
@@ -158,9 +157,10 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
           tag_id: tag.id,
         }));
         
+        // Cast to any to avoid TypeScript errors
         const { error: tagError } = await supabase
           .from('contact_tags')
-          .insert(tagAssignments);
+          .insert(tagAssignments as any);
         
         if (tagError) {
           throw tagError;

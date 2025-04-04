@@ -20,19 +20,17 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Tag } from "@/components/tags/Tag";
-import type { Database } from "@/integrations/supabase/types";
-
-type Tag = Database['public']['Tables']['tags']['Row'];
+import { Tag as TagType } from "@/types/database-extensions";
 
 interface TagSelectorProps {
   contactId?: string;
-  selectedTags: Tag[];
-  onTagsChange: (tags: Tag[]) => void;
+  selectedTags: TagType[];
+  onTagsChange: (tags: TagType[]) => void;
 }
 
 export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [tags, setTags] = useState<TagType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -44,10 +42,11 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
   const fetchTags = async () => {
     setIsLoading(true);
     try {
+      // Cast supabase to use our extended client type for this specific query
       const { data, error } = await supabase
         .from('tags')
         .select('*')
-        .order('name', { ascending: true });
+        .order('name', { ascending: true }) as unknown as { data: TagType[] | null; error: any };
       
       if (error) {
         throw error;
@@ -66,7 +65,7 @@ export function TagSelector({ contactId, selectedTags, onTagsChange }: TagSelect
     }
   };
 
-  const handleSelectTag = (selectedTag: Tag) => {
+  const handleSelectTag = (selectedTag: TagType) => {
     // Check if tag is already selected
     const isSelected = selectedTags.some(tag => tag.id === selectedTag.id);
     

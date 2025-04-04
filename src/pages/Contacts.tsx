@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,10 +26,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EditContactDialog } from "@/components/contacts/EditContactDialog";
 import { Tag } from "@/components/tags/Tag";
-import type { Database } from "@/integrations/supabase/types";
+import { Tag as TagType } from "@/types/database-extensions";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
-type TagType = Database['public']['Tables']['tags']['Row'];
 
 export default function Contacts() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,7 +79,7 @@ export default function Contacts() {
       const { data: relationships, error: relError } = await supabase
         .from('contact_tags')
         .select('contact_id, tag_id')
-        .in('contact_id', contactIds);
+        .in('contact_id', contactIds) as unknown as { data: { contact_id: string, tag_id: string }[] | null; error: any };
       
       if (relError) {
         console.error("Error fetching tag relationships:", relError);
@@ -99,7 +97,7 @@ export default function Contacts() {
       const { data: tags, error: tagError } = await supabase
         .from('tags')
         .select('*')
-        .in('id', tagIds);
+        .in('id', tagIds) as unknown as { data: TagType[] | null; error: any };
         
       if (tagError) {
         console.error("Error fetching tags:", tagError);
@@ -182,6 +180,7 @@ export default function Contacts() {
     setContactToEdit(contact);
   };
 
+  // JSX
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
