@@ -8,6 +8,8 @@ import { SearchBar } from "@/components/crm/SearchBar";
 import { ContactDetail } from "@/components/crm/ContactDetail";
 import { AddInteractionDialog } from "@/components/crm/AddInteractionDialog";
 import { useToast } from "@/components/ui/use-toast";
+import { TagFilter } from "@/components/tags/TagFilter";
+import { useContactsTagFilter } from "@/hooks/useContactsTagFilter";
 import { supabase } from "@/integrations/supabase/client";
 import { PlusCircle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
@@ -21,6 +23,7 @@ export default function CRM() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showAddInteractionDialog, setShowAddInteractionDialog] = useState(false);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -52,7 +55,7 @@ export default function CRM() {
     }
   };
   
-  const filteredContacts = contacts.filter(contact => {
+  const filteredBySearch = contacts.filter(contact => {
     if (!searchQuery) return true;
     
     const fullName = `${contact.first_name} ${contact.last_name}`.toLowerCase();
@@ -63,6 +66,9 @@ export default function CRM() {
       (contact.company && contact.company.toLowerCase().includes(query))
     );
   });
+  
+  const { filteredContacts: tagFilteredContacts, isLoading: isTagFilterLoading } = 
+    useContactsTagFilter(filteredBySearch, selectedTagIds);
 
   const handleSelectContact = (contact: Contact) => {
     setSelectedContact(contact);
@@ -88,6 +94,8 @@ export default function CRM() {
     });
   };
 
+  const isFiltering = isLoading || isTagFilterLoading;
+
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-6">
@@ -98,8 +106,16 @@ export default function CRM() {
         </Button>
       </div>
 
-      <div className="mb-6">
-        <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <div className="mb-6 space-y-2">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex-1">
+            <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          </div>
+          <TagFilter 
+            selectedTagIds={selectedTagIds}
+            onTagsChange={setSelectedTagIds}
+          />
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -110,8 +126,8 @@ export default function CRM() {
         
         <TabsContent value="contacts" className="space-y-4">
           <ContactsList 
-            contacts={filteredContacts} 
-            isLoading={isLoading} 
+            contacts={tagFilteredContacts} 
+            isLoading={isFiltering} 
             onSelectContact={handleSelectContact}
           />
         </TabsContent>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +19,7 @@ import { ContactsToolbar } from "@/components/contacts/ContactsToolbar";
 import { ContactsLoading } from "@/components/contacts/ContactsLoading";
 import { useContactsSort } from "@/hooks/useContactsSort";
 import { useContactsFilter } from "@/hooks/useContactsFilter";
+import { useContactsTagFilter } from "@/hooks/useContactsTagFilter";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
@@ -29,12 +29,14 @@ export default function Contacts() {
   const [isLoading, setIsLoading] = useState(true);
   const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
   const [contactToEdit, setContactToEdit] = useState<Contact | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const { toast } = useToast();
   
-  const { searchQuery, setSearchQuery, filteredContacts } = useContactsFilter(contacts);
+  const { searchQuery, setSearchQuery, filteredContacts: textFilteredContacts } = useContactsFilter(contacts);
+  const { filteredContacts: tagFilteredContacts, isLoading: isTagFilterLoading } = useContactsTagFilter(textFilteredContacts, selectedTagIds);
   const { sortField, sortDirection, handleSort, sortContacts } = useContactsSort();
   
-  const sortedAndFilteredContacts = sortContacts(filteredContacts);
+  const sortedContacts = sortContacts(tagFilteredContacts);
   
   // Fetch contacts on component mount
   useEffect(() => {
@@ -98,20 +100,24 @@ export default function Contacts() {
     }
   };
 
+  const isFiltering = isLoading || isTagFilterLoading;
+
   return (
     <MainLayout>
       <ContactsToolbar 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        selectedTagIds={selectedTagIds}
+        onTagsChange={setSelectedTagIds}
       />
       
-      {isLoading ? (
+      {isFiltering ? (
         <ContactsLoading />
       ) : contacts.length === 0 ? (
         <ContactsEmptyState />
       ) : (
         <ContactsTable
-          contacts={sortedAndFilteredContacts}
+          contacts={sortedContacts}
           sortField={sortField}
           sortDirection={sortDirection}
           onSort={handleSort}
