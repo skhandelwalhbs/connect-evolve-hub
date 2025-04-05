@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { FileAttachment, HistoricalTag } from "@/types/tag";
 import type { Database } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 
 type Interaction = Database['public']['Tables']['contact_interactions']['Row'];
 
@@ -72,7 +73,7 @@ export function EditInteractionDialog({
       try {
         const attachments = 
           typeof interaction.file_attachments === 'string' 
-            ? JSON.parse(interaction.file_attachments) 
+            ? JSON.parse(interaction.file_attachments as string) 
             : interaction.file_attachments || [];
             
         setExistingAttachments(Array.isArray(attachments) ? attachments : []);
@@ -238,7 +239,7 @@ export function EditInteractionDialog({
           type: values.type,
           date: new Date(values.date).toISOString(),
           notes: values.notes,
-          file_attachments: updatedAttachments
+          file_attachments: updatedAttachments as unknown as Json
         })
         .eq('id', interaction.id)
         .select('*')

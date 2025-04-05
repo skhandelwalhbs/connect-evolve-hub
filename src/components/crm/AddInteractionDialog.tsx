@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTagSelection } from "@/hooks/useTagSelection";
 import { FileAttachment, HistoricalTag } from "@/types/tag";
 import type { Database } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
 
@@ -190,8 +191,8 @@ export function AddInteractionDialog({
           type,
           notes,
           date: new Date(date).toISOString(),
-          file_attachments: fileAttachments,
-          historical_tags: historicalTags
+          file_attachments: fileAttachments as unknown as Json,
+          historical_tags: historicalTags as unknown as Json
         });
       
       if (error) {
