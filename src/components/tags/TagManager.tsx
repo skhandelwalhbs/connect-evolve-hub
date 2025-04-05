@@ -20,14 +20,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { Database } from "@/integrations/supabase/types";
 
 type Tag = Database['public']['Tables']['tags']['Row'];
+type TagWithCount = Tag & { contact_count: number };
 
 export function TagManager() {
-  const [tags, setTags] = useState<Tag[]>([]);
+  const [tags, setTags] = useState<TagWithCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
+  const [selectedTag, setSelectedTag] = useState<TagWithCount | null>(null);
   const [isDeletingTag, setIsDeletingTag] = useState(false);
   const { toast } = useToast();
   
@@ -39,13 +40,34 @@ export function TagManager() {
   const fetchTags = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch all tags
+      const { data: tagsData, error: tagsError } = await supabase
         .from('tags')
         .select('*')
         .order('name');
       
-      if (error) throw error;
-      setTags(data || []);
+      if (tagsError) throw tagsError;
+      
+      // For each tag, fetch the count of associated contacts
+      const tagsWithCounts = await Promise.all((tagsData || []).map(async (tag) => {
+        const { count, error: countError } = await supabase
+          .from('contact_tags')
+          .select('*', { count: 'exact', head: true })
+          .eq('tag_id', tag.id);
+        
+        if (countError) {
+          console.error('Error fetching count for tag:', countError);
+          return { ...tag, contact_count: 0 };
+        }
+        
+        return { ...tag, contact_count: count || 0 };
+      }));
+      
+      // Sort by name
+      tagsWithCounts.sort((a, b) => a.name.localeCompare(b.name));
+      
+      setTags(tagsWithCounts);
     } catch (error: any) {
       console.error('Error fetching tags:', error);
       toast({
@@ -58,12 +80,12 @@ export function TagManager() {
     }
   };
   
-  const handleEdit = (tag: Tag) => {
+  const handleEdit = (tag: TagWithCount) => {
     setSelectedTag(tag);
     setEditDialogOpen(true);
   };
   
-  const handleDelete = (tag: Tag) => {
+  const handleDelete = (tag: TagWithCount) => {
     setSelectedTag(tag);
     setDeleteDialogOpen(true);
   };
@@ -73,14 +95,6 @@ export function TagManager() {
     
     try {
       setIsDeletingTag(true);
-      
-      // Check if tag is in use
-      const { count, error: countError } = await supabase
-        .from('contact_tags')
-        .select('*', { count: 'exact', head: true })
-        .eq('tag_id', selectedTag.id);
-      
-      if (countError) throw countError;
       
       // Delete the tag
       const { error } = await supabase
@@ -96,8 +110,8 @@ export function TagManager() {
       // Show success message with count of affected contacts
       toast({
         title: "Tag deleted",
-        description: count && count > 0
-          ? `"${selectedTag.name}" has been removed from ${count} contact${count === 1 ? '' : 's'}.`
+        description: selectedTag.contact_count > 0
+          ? `"${selectedTag.name}" has been removed from ${selectedTag.contact_count} contact${selectedTag.contact_count === 1 ? '' : 's'}.`
           : `"${selectedTag.name}" has been deleted.`
       });
       
@@ -115,16 +129,22 @@ export function TagManager() {
   };
   
   const handleTagCreated = (newTag: Tag) => {
+    // Add the new tag with a count of 0
     setTags(prevTags => 
-      [...prevTags, newTag]
+      [...prevTags, { ...newTag, contact_count: 0 }]
         .sort((a, b) => a.name.localeCompare(b.name))
     );
   };
   
   const handleTagUpdated = (updatedTag: Tag) => {
+    // Preserve the existing contact count when updating
     setTags(prevTags => 
-      prevTags.map(tag => tag.id === updatedTag.id ? updatedTag : tag)
-        .sort((a, b) => a.name.localeCompare(b.name))
+      prevTags.map(tag => {
+        if (tag.id === updatedTag.id) {
+          return { ...updatedTag, contact_count: tag.contact_count };
+        }
+        return tag;
+      }).sort((a, b) => a.name.localeCompare(b.name))
     );
   };
 
@@ -170,6 +190,9 @@ export function TagManager() {
                     name={tag.name} 
                     color={tag.color}
                   />
+                  <span className="text-xs text-muted-foreground ml-1">
+                    {tag.contact_count > 0 ? `(${tag.contact_count} contact${tag.contact_count === 1 ? '' : 's'})` : '(0)'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button 
