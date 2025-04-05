@@ -14,6 +14,8 @@ export type Database = {
           contact_id: string
           created_at: string
           date: string
+          file_attachments: Json | null
+          historical_tags: Json | null
           id: string
           notes: string | null
           type: string
@@ -23,6 +25,8 @@ export type Database = {
           contact_id: string
           created_at?: string
           date?: string
+          file_attachments?: Json | null
+          historical_tags?: Json | null
           id?: string
           notes?: string | null
           type: string
@@ -32,6 +36,8 @@ export type Database = {
           contact_id?: string
           created_at?: string
           date?: string
+          file_attachments?: Json | null
+          historical_tags?: Json | null
           id?: string
           notes?: string | null
           type?: string
