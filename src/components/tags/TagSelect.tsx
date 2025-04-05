@@ -1,14 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { Check, Plus } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Check, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
+import { ScrollArea } from "@/components/ui/scroll-area"; 
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tag } from "./Tag";
 import { TagEditDialog } from "./TagEditDialog";
 import { cn } from "@/lib/utils";
@@ -17,12 +13,6 @@ import { useToast } from "@/components/ui/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
 type Tag = Database['public']['Tables']['tags']['Row'];
-type ContactTag = {
-  id: string;
-  contactId: string;
-  tagId: string;
-  tag?: Tag;
-};
 
 interface TagSelectProps {
   contactId: string;
@@ -35,12 +25,14 @@ export function TagSelect({ contactId, onTagsChange, className, disabled = false
   const [open, setOpen] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [createTagDialogOpen, setCreateTagDialogOpen] = useState(false);
   const { toast } = useToast();
   
   // Fetch all available tags
   useEffect(() => {
     async function fetchTags() {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('tags')
         .select('*')
@@ -56,6 +48,7 @@ export function TagSelect({ contactId, onTagsChange, className, disabled = false
       } else {
         setTags(data || []);
       }
+      setIsLoading(false);
     }
     
     fetchTags();
@@ -149,83 +142,81 @@ export function TagSelect({ contactId, onTagsChange, className, disabled = false
 
   return (
     <div className={className}>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <div className="border rounded-md p-3 bg-background">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-medium">Select tags</span>
           <Button 
-            variant="outline" 
-            className={cn(
-              "w-full justify-start text-left font-normal",
-              !selectedTags.length && "text-muted-foreground"
-            )}
+            variant="ghost"
+            size="sm"
+            onClick={() => setCreateTagDialogOpen(true)}
             disabled={disabled}
+            className="text-xs h-7 px-2"
           >
-            {selectedTags.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
-                {selectedTags.length <= 3 ? 
-                  selectedTags.map(tag => (
-                    <Tag 
-                      key={tag.id} 
-                      id={tag.id} 
-                      name={tag.name} 
-                      color={tag.color}
-                    />
-                  )) : 
-                  <>
-                    <Tag 
-                      id={selectedTags[0].id} 
-                      name={selectedTags[0].name} 
-                      color={selectedTags[0].color}
-                    />
-                    <Badge variant="secondary">{`+${selectedTags.length - 1} more`}</Badge>
-                  </>
-                }
-              </div>
-            ) : (
-              "Select tags..."
-            )}
+            <Plus className="h-3 w-3 mr-1" />
+            New
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0" align="start">
-          <Command>
-            <CommandInput placeholder="Search tags..." />
-            <CommandEmpty>No tags found.</CommandEmpty>
-            <CommandList>
-              <CommandGroup>
-                {tags.map(tag => (
-                  <CommandItem
+        </div>
+        
+        {isLoading ? (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : tags.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-2">No tags available. Create your first tag.</p>
+        ) : (
+          <ScrollArea className="max-h-[180px]">
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              {tags.map(tag => {
+                const isSelected = selectedTags.some(t => t.id === tag.id);
+                return (
+                  <div
                     key={tag.id}
-                    value={tag.name}
-                    onSelect={() => toggleTag(tag)}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
+                      isSelected 
+                        ? "bg-accent text-accent-foreground" 
+                        : "hover:bg-muted",
+                      disabled && "opacity-50 cursor-not-allowed"
+                    )}
+                    onClick={() => {
+                      if (!disabled) {
+                        toggleTag(tag);
+                      }
+                    }}
                   >
-                    <div className="flex items-center gap-2 w-full">
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: tag.color }}
-                      />
-                      <span className="flex-1">{tag.name}</span>
-                      {selectedTags.some(t => t.id === tag.id) && (
-                        <Check className="h-4 w-4" />
-                      )}
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-              <CommandSeparator />
-              <CommandGroup>
-                <CommandItem
-                  onSelect={() => {
-                    setOpen(false);
-                    setCreateTagDialogOpen(true);
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create new tag
-                </CommandItem>
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+                    <div
+                      className="h-3 w-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: tag.color }}
+                    />
+                    <span className="text-sm truncate flex-1">{tag.name}</span>
+                    {isSelected && (
+                      <Check className="h-4 w-4 flex-shrink-0" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        )}
+        
+        {selectedTags.length > 0 && (
+          <div className="mt-3 pt-3 border-t">
+            <div className="text-sm font-medium mb-2">Selected tags:</div>
+            <div className="flex flex-wrap gap-1">
+              {selectedTags.map(tag => (
+                <Tag 
+                  key={tag.id} 
+                  id={tag.id} 
+                  name={tag.name} 
+                  color={tag.color}
+                  removable
+                  onRemove={() => toggleTag(tag)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
       
       <TagEditDialog
         open={createTagDialogOpen}
