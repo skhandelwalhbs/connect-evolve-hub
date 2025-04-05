@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Dialog,
@@ -14,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, FileUp, X, FilePdf, FileText, FileSpreadsheet } from "lucide-react";
+import { Loader2, FileUp, X, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTagSelection } from "@/hooks/useTagSelection";
 import { FileAttachment, HistoricalTag } from "@/types/tag";
@@ -38,15 +37,11 @@ type InteractionType = "Call" | "Meeting" | "Email" | "Follow-up" | "Other";
 
 // File type icons mapping
 const fileTypeIcons = {
-  pdf: FilePdf,
-  spreadsheet: FileSpreadsheet,
   default: FileText
 };
 
 // Function to determine icon based on file type
 const getFileIcon = (fileType: string) => {
-  if (fileType.includes('pdf')) return fileTypeIcons.pdf;
-  if (fileType.includes('sheet') || fileType.includes('excel') || fileType.includes('csv')) return fileTypeIcons.spreadsheet;
   return fileTypeIcons.default;
 };
 
@@ -62,7 +57,7 @@ export function AddInteractionDialog({
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
+  const [uploadProgress, setUploadProgress<{[key: string]: number}>({});
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -93,7 +88,7 @@ export function AddInteractionDialog({
       }
     }
   }, [open]);
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
     if (selectedFiles) {
@@ -154,10 +149,8 @@ export function AddInteractionDialog({
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('interaction_attachments')
             .upload(filePath, file, {
-              onUploadProgress: (progress) => {
-                const percent = Math.round((progress.loaded / progress.total) * 100);
-                setUploadProgress(prev => ({ ...prev, [fileId]: percent }));
-              }
+              cacheControl: '3600',
+              upsert: false
             });
             
           if (uploadError) {

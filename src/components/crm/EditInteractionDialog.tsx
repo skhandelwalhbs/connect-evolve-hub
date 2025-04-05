@@ -9,10 +9,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, FileUp, X, FilePdf, FileText, FileSpreadsheet, Trash2, Download } from "lucide-react";
+import { Loader2, FileUp, X, FileText, Trash2, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { FileAttachment } from "@/types/tag";
+import { FileAttachment, HistoricalTag } from "@/types/tag";
 import type { Database } from "@/integrations/supabase/types";
 
 type Interaction = Database['public']['Tables']['contact_interactions']['Row'];
@@ -44,15 +44,11 @@ interface EditInteractionDialogProps {
 
 // File type icons mapping
 const fileTypeIcons = {
-  pdf: FilePdf,
-  spreadsheet: FileSpreadsheet,
   default: FileText
 };
 
 // Function to determine icon based on file type
 const getFileIcon = (fileType: string) => {
-  if (fileType.includes('pdf')) return fileTypeIcons.pdf;
-  if (fileType.includes('sheet') || fileType.includes('excel') || fileType.includes('csv')) return fileTypeIcons.spreadsheet;
   return fileTypeIcons.default;
 };
 
@@ -203,10 +199,8 @@ export function EditInteractionDialog({
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('interaction_attachments')
             .upload(filePath, file, {
-              onUploadProgress: (progress) => {
-                const percent = Math.round((progress.loaded / progress.total) * 100);
-                setUploadProgress(prev => ({ ...prev, [fileId]: percent }));
-              }
+              cacheControl: '3600',
+              upsert: false
             });
             
           if (uploadError) {
