@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Mail, Phone, MessageSquare, User, Briefcase, MapPin, Link2, Clock, FileText, ArrowUp, ArrowDown } from "lucide-react";
 import { AddInteractionDialog } from "@/components/crm/AddInteractionDialog";
+import { TagsList } from "@/components/tags/TagsList";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
@@ -106,6 +107,7 @@ export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsL
                 Name {getSortIcon('first_name')}
               </div>
             </TableHead>
+            <TableHead>Tags</TableHead>
             <TableHead 
               className="cursor-pointer hover:bg-muted/50" 
               onClick={() => handleSort('company')}
@@ -156,6 +158,9 @@ export function ContactsList({ contacts, isLoading, onSelectContact }: ContactsL
                   <User className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                   {contact.first_name} {contact.last_name}
                 </div>
+              </TableCell>
+              <TableCell>
+                <TagsList contactId={contact.id} />
               </TableCell>
               <TableCell>
                 <div className="flex items-center">

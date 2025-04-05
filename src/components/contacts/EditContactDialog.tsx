@@ -17,9 +17,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Clock } from "lucide-react";
 import { AddReminderDialog } from "@/components/crm/AddReminderDialog";
+import { TagSelect } from "@/components/tags/TagSelect";
+import { TagsList } from "@/components/tags/TagsList";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
+type Tag = Database['public']['Tables']['tags']['Row'];
 
 interface EditContactDialogProps {
   contact: Contact | null;
@@ -32,6 +35,7 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
   const [formData, setFormData] = useState<Partial<Contact>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [contactTags, setContactTags] = useState<Tag[]>([]);
   const { toast } = useToast();
 
   // Initialize form data when contact changes or dialog opens
@@ -128,6 +132,11 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
     });
   };
 
+  // Handle tags change
+  const handleTagsChange = (tags: Tag[]) => {
+    setContactTags(tags);
+  };
+
   if (!contact) return null;
 
   return (
@@ -163,6 +172,14 @@ export function EditContactDialog({ contact, open, onOpenChange, onSuccess }: Ed
                     required
                   />
                 </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="tags">Tags</Label>
+                <TagSelect 
+                  contactId={contact.id} 
+                  onTagsChange={handleTagsChange}
+                />
               </div>
               
               <div className="space-y-2">

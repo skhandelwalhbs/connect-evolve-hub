@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Bell, List, Grid, Edit } from "lucide-react";
 import { InteractionsList } from "@/components/crm/InteractionsList";
 import { RemindersSection } from "@/components/crm/RemindersSection";
-import { Badge } from "@/components/ui/badge";
+import { TagsList } from "@/components/tags/TagsList";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { EditContactDialog } from "@/components/contacts/EditContactDialog";
@@ -49,6 +49,7 @@ export function ContactDetail({
         <CardDescription>
           {contact.company} - {contact.position}
         </CardDescription>
+        <TagsList contactId={contact.id} className="mt-2" />
         <div className="flex space-x-2 mt-4 border-b pb-2">
           <Button variant={activeSection === 'interactions' ? 'default' : 'ghost'} size="sm" onClick={() => setActiveSection('interactions')} className="rounded-full">
             Interactions

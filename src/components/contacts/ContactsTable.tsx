@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, Pencil, Trash2, MapPin, Briefcase, User, Clock, Link2, ArrowUp, ArrowDown } from "lucide-react";
+import { TagsList } from "@/components/tags/TagsList";
 import type { Database } from "@/integrations/supabase/types";
 
 type Contact = Database['public']['Tables']['contacts']['Row'];
@@ -44,6 +45,7 @@ export function ContactsTable({
                 Name {getSortIcon('first_name')}
               </div>
             </TableHead>
+            <TableHead>Tags</TableHead>
             <TableHead 
               className="cursor-pointer hover:bg-muted/50" 
               onClick={() => onSort('company')}
@@ -102,6 +104,9 @@ export function ContactsTable({
                   <User className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                   {contact.first_name} {contact.last_name}
                 </div>
+              </TableCell>
+              <TableCell>
+                <TagsList contactId={contact.id} />
               </TableCell>
               <TableCell>
                 <div className="flex items-center">
