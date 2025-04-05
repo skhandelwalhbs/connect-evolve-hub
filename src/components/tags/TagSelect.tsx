@@ -140,6 +140,13 @@ export function TagSelect({ contactId, onTagsChange, className, disabled = false
     toggleTag(newTag);
   };
 
+  // Added this handler to stop event propagation
+  const handleNewButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCreateTagDialogOpen(true);
+  };
+
   return (
     <div className={className}>
       <div className="border rounded-md p-3 bg-background">
@@ -148,7 +155,7 @@ export function TagSelect({ contactId, onTagsChange, className, disabled = false
           <Button 
             variant="ghost"
             size="sm"
-            onClick={() => setCreateTagDialogOpen(true)}
+            onClick={handleNewButtonClick}
             disabled={disabled}
             className="text-xs h-7 px-2"
           >
