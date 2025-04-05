@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Database } from "@/integrations/supabase/types";
 
 type Tag = Database['public']['Tables']['tags']['Row'];
@@ -46,6 +47,7 @@ export function TagEditDialog({ tag, open, onOpenChange, onSuccess }: TagEditDia
   const [color, setColor] = useState(tag?.color || PREDEFINED_COLORS[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +57,15 @@ export function TagEditDialog({ tag, open, onOpenChange, onSuccess }: TagEditDia
         variant: "destructive",
         title: "Validation error",
         description: "Tag name is required"
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication error",
+        description: "You must be logged in to create or edit tags"
       });
       return;
     }
@@ -80,10 +91,14 @@ export function TagEditDialog({ tag, open, onOpenChange, onSuccess }: TagEditDia
         
         if (onSuccess && data) onSuccess(data);
       } else {
-        // Create new tag
+        // Create new tag - now includes the user_id
         const { data, error } = await supabase
           .from('tags')
-          .insert({ name, color })
+          .insert({ 
+            name, 
+            color, 
+            user_id: user.id 
+          })
           .select()
           .single();
         
