@@ -57,7 +57,7 @@ export function AddInteractionDialog({
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress<{[key: string]: number}>({});
+  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
   const { toast } = useToast();
   const { user } = useAuth();
   
